@@ -88,37 +88,11 @@ def calculate_kda_score(participant):
 
 def calculate_rank(participant, game_duration, metrics, weights):
     rank = ''
-#    kda_score = calculate_kda_score(participant)
     weights[0] = KDA_WEIGHT
-    #rank_score = sum(m * w for m, w in zip(metrics, weights))
-    #metrics.append(rank_score)
 
     weights = [KDA_WEIGHT, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
     rank_score = sum(m * w for m, w in zip(metrics, weights))
     metrics.append(rank_score)
-
-    #rank_score_ranges = {
-    #    'S+': (percentileofscore(metrics, 18), float('inf')),
-    #    'S': (percentileofscore(metrics, 15), percentileofscore(metrics, 18)),
-    #    'S-': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
-    #    'A+': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
-    #    'A': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
-    #    'A-': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
-    #    'B+': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
-    #    'B': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
-    #    'B-': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
-    #    'C+': (0, percentileofscore(metrics, 1)),
-    #    'C': (-percentileofscore(metrics, 1), 0),
-    #    'C-': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
-    #    'D+': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
-    #    'D': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
-    #    'D-': (-float('inf'), -percentileofscore(metrics, 7))
-    #}
-
-    #for rank, score_range in sorted(rank_score_ranges.items(), key=lambda x: x[1][0], reverse=True):
-    #    lower_bound, upper_bound = score_range
-    #    if lower_bound <= rank_score < upper_bound:
-    #        return rank
 
     return rank
 
