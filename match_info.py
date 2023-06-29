@@ -1,6 +1,6 @@
 import os
 import json
-from riotwatcher import LolWatcher, ApiError
+from riotwatcher import LolWatcher
 from dotenv import load_dotenv
 from datetime import datetime
 from scipy.stats import percentileofscore
@@ -9,7 +9,7 @@ import shutil
 load_dotenv()
 riot_api_key = os.getenv('RIOT_API_KEY')
 
-lol_watcher = LolWatcher(riot_api_key)
+lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
 summoner_name = 'britney phi'  # Set your summoner name here
