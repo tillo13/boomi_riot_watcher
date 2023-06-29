@@ -25,6 +25,12 @@ for match_id in my_matches:
 matches_folder = "matches"
 if not os.path.exists(matches_folder):
     os.makedirs(matches_folder)
+else:
+    # Delete existing .json files in the "matches" directory
+    for file_name in os.listdir(matches_folder):
+        if file_name.endswith(".json"):
+            file_path = os.path.join(matches_folder, file_name)
+            os.remove(file_path)
 
 # Initialize variables for combined totals and averages
 total_matches = len(aram_matches)
@@ -34,7 +40,6 @@ total_deaths = 0
 total_assists = 0
 total_damage_dealt = 0
 total_gold_earned = 0
-total_vision_score = 0
 total_objective_control = 0
 total_turret_damage = 0
 total_survival_time = 0
@@ -65,9 +70,9 @@ if aram_matches:
                     print(f"Kills: {participant['kills']}")
                     print(f"Deaths: {participant['deaths']}")
                     print(f"Assists: {participant['assists']}")
+                    print(f"KDA: {(participant['kills'] + participant['assists']) / participant['deaths']:.2f}")
                     print(f"Damage Dealt: {participant['totalDamageDealt']}")
                     print(f"Gold Earned: {participant['goldEarned']}")
-                    print(f"Vision Score: {participant['visionScore']}")
                     print(f"Objective Control: {participant['objectivesStolen']}")
                     print(f"Turret Damage: {participant['damageDealtToTurrets']}")
                     print(f"Survival Time: {participant['totalTimeSpentDead']} seconds")
@@ -80,5 +85,32 @@ if aram_matches:
                     total_assists += participant['assists']
                     total_damage_dealt += participant['totalDamageDealt']
                     total_gold_earned += participant['goldEarned']
-                    total_vision_score += participant['visionScore']
-                    total_object
+                    total_objective_control += participant['objectivesStolen']
+                    total_turret_damage += participant['damageDealtToTurrets']
+                    total_survival_time += participant['totalTimeSpentDead']
+                    
+    # Calculate averages
+    average_kills = total_kills / total_matches
+    average_deaths = total_deaths / total_matches
+    average_assists = total_assists / total_matches
+    average_damage_dealt = total_damage_dealt / total_matches
+    average_gold_earned = total_gold_earned / total_matches
+    average_objective_control = total_objective_control / total_matches
+    average_turret_damage = total_turret_damage / total_matches
+    average_survival_time = total_survival_time / total_matches
+    
+    # Display combined totals and averages
+    print("Combined Metrics for Cardyflower:")
+    print(f"Total Matches: {total_matches}")
+    print(f"Total Wins: {total_wins}")
+    print(f"Average Kills: {average_kills}")
+    print(f"Average Deaths: {average_deaths}")
+    print(f"Average Assists: {average_assists}")
+    print(f"Average KDA: {(average_kills + average_assists) / average_deaths:.2f}")
+    print(f"Average Damage Dealt: {average_damage_dealt}")
+    print(f"Average Gold Earned: {average_gold_earned}")
+    print(f"Average Objective Control: {average_objective_control}")
+    print(f"Average Turret Damage: {average_turret_damage}")
+    print(f"Average Survival Time: {average_survival_time} seconds")
+else:
+    print("No ARAM matches found.")
