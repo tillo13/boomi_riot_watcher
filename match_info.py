@@ -9,6 +9,8 @@ from riotwatcher import LolWatcher
 load_dotenv()
 
 debug_mode = False  # Set to True to show calculation details, False to hide them
+KDA_WEIGHT = 13  # Change this value to tweak the value KDA has on the summoners Total Rank score.  
+#In the case of KDA_WEIGHT being 1, the total sum of the weights (including `KDA_WEIGHT`) would be 10. Therefore, the KDA Score would contribute 10% (1 out of 10) of the total weight.  Alternatively if KDA_WEIGHT is set to 10, it would contribute over half (10 out of 19, or approximately 52.63%) of the total weight. 
 
 def get_env_variable(name):
     try:
@@ -53,15 +55,15 @@ def calculate_kda_score(participant):
     else:
         return kda * 0.5  # Assign a lower score for KDA below 1
 
-def calculate_rank(participant, game_duration, metrics):
+def calculate_rank(participant, game_duration, metrics, weights):
     rank = ''
-
-    # calculate KDA score and apply custom logic
     kda_score = calculate_kda_score(participant)
-    metrics[0] = kda_score  # Replace the first element of metrics (which is KDA Score) with the new KDA score.
+    weights[0] = KDA_WEIGHT
+    rank_score = sum(m * w for m, w in zip(metrics, weights))
+    metrics.append(rank_score)
 
     # Define weights for each metric
-    weights = [4, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
+    weights = [KDA_WEIGHT, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
 
     # Calculate weighted rank score
     rank_score = sum(m * w for m, w in zip(metrics, weights))
@@ -192,7 +194,7 @@ if aram_matches:
                         calculation_details.append(f"{name} ({metric} * {weight}): {metric * weight}")
                     
                     # Here we calculate and print the rank
-                    rank = calculate_rank(participant, game_duration, metrics)
+                    rank = calculate_rank(participant, game_duration, metrics, weights)
                     
                     print(f"Estimated Rank: \033[34m{rank}\033[0m")
                     print(f"Total rank score: \033[33m{metrics[-1]}\033[0m")  # Print in yellow
