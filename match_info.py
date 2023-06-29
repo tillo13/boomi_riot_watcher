@@ -10,7 +10,7 @@ lol_watcher = LolWatcher(os.getenv('RIOT_API_KEY'))
 
 my_region = 'na1'
 
-summonerName = 'cardyflower'
+summonerName = 'cardyflower'  # Set your summoner name here
 
 me = lol_watcher.summoner.by_name(my_region, summonerName)
 
@@ -18,6 +18,7 @@ my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
 
 aram_matches = []
 
+# Fetch match details and check if it's an ARAM match (queueId == 450)
 for match_id in my_matches:
     try:
         match_details = lol_watcher.match.by_id(my_region, match_id)
@@ -26,15 +27,18 @@ for match_id in my_matches:
     except ApiError as e:
         print(f"Error fetching match {match_id}: {e}")
 
+# Create a "matches" folder if it doesn't exist
 matches_folder = "matches"
 if not os.path.exists(matches_folder):
     os.makedirs(matches_folder)
 else:
+    # Delete existing .json files in the "matches" directory
     for file_name in os.listdir(matches_folder):
         if file_name.endswith(".json"):
             file_path = os.path.join(matches_folder, file_name)
             os.remove(file_path)
 
+# Initialize variables for combined totals and averages
 total_matches = len(aram_matches)
 total_wins = 0
 total_kills = 0
@@ -44,14 +48,14 @@ total_damage_dealt = 0
 total_gold_earned = 0
 total_game_duration = 0
 
-grades = 'S+ S S- A+ A A- B+ B B- C+ C C- D+ D D-'.split()
-
+# Save the match details as JSON files in the "matches" folder
 if aram_matches:
     for match in aram_matches:
         file_name = os.path.join(matches_folder, f"{match['metadata']['matchId']}.json")
         if os.path.exists(file_name):
             print(f"Skipping existing match: {file_name}")
         else:
+            # Convert the match details to a JSON-compatible format
             match_json = json.loads(json.dumps(match))
 
             with open(file_name, 'w') as file:
@@ -62,12 +66,13 @@ if aram_matches:
             print("===============================")
             print(f"Match ID: \033[34m{match_id}\033[0m")
             game_creation_timestamp_ms = match['info']['gameCreation']
-            game_creation_datetime = datetime.fromtimestamp(game_creation_timestamp_ms / 1000)
+            game_creation_datetime = datetime.fromtimestamp(game_creation_timestamp_ms / 1000)  # Python expects seconds
             print(f"Match start date: \033[34m{game_creation_datetime}\033[0m")
             print(f"Game Duration: \033[34m{game_duration // 60} minutes\033[0m")
             print(f"Saved as: \033[34m{file_name}\033[0m")
-            print(f"Specific metrics for \033[32m{summonerName}\033[0m:")
+            print(f"Specific metrics for \033[32m{summonerName}\033[0m:") 
 
+            # Display individual metrics for the match
             participants = match['info']['participants']
             for participant in participants:
                 participant_puuid = participant['puuid']
@@ -75,6 +80,7 @@ if aram_matches:
                     print(f"Win: \033[34m{participant['win']}\033[0m")
                     print(f"Champion: \033[34m{participant['championName']}\033[0m")
 
+                    # calculate kills, deaths, and assists per minute
                     kpm = participant['kills'] / (game_duration / 60)
                     dpm = participant['deaths'] / (game_duration / 60)
                     apm = participant['assists'] / (game_duration / 60)
@@ -94,13 +100,11 @@ if aram_matches:
                     print(f"Kill participation: \033[34m{participant['challenges']['killParticipation']*100:.2f}%\033[0m")
                     print(f"Team Damage Perc: \033[34m{participant['challenges']['teamDamagePercentage']*100:.2f}%\033[0m")
                     print(f"Damage Taken On Team Perc: \033[34m{participant['challenges']['damageTakenOnTeamPercentage']*100:.2f}%\033[0m")
-
-                    score = participant['kills'] + participant['assists'] * 0.5 - participant['deaths'] + participant['challenges']['teamDamagePercentage']*100/10 + participant['challenges']['killParticipation']*100/10 - participant['challenges']['damageTakenOnTeamPercentage']*100/10
-                    grade_index = min(int(score//1), len(grades)) # Ensure the index isn't out of range
-                    print(f"Estimated Rank: \033[34m{grades[grade_index]}\033[0m") # Prints the grade based on the score
-
+                   
                     print("===============================")
 
+
+                    # Update combined totals
                     total_wins += int(participant['win'])
                     total_kills += participant['kills']
                     total_deaths += participant['deaths']
@@ -109,6 +113,7 @@ if aram_matches:
                     total_gold_earned += participant['goldEarned']
                     total_game_duration += game_duration
 
+    # Calculate averages
     average_kills = total_kills / total_matches
     average_deaths = total_deaths / total_matches
     average_assists = total_assists / total_matches
@@ -116,11 +121,13 @@ if aram_matches:
     average_dpm = total_deaths / (total_game_duration / 60)
     average_apm = total_assists / (total_game_duration / 60)
 
+    # Display combined totals and averages
     print("===============================")
     print("Combined Metrics for \033[32m{}:\033[0m".format(summonerName))
     print(f"Total Matches: \033[32m{total_matches}\033[0m")
     print(f"Total Wins: \033[32m{total_wins}\033[0m")
 
+    # Calculate overall per-minute averages
     avg_kpm_total = total_kills / (total_game_duration / 60)
     avg_dpm_total = total_deaths / (total_game_duration / 60)
     avg_apm_total = total_assists / (total_game_duration / 60)
