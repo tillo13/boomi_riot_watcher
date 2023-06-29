@@ -20,25 +20,42 @@ if not riot_api_key:
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
-summoner_name = 'britney phi'  # Set your summoner name here
+summoner_name = 'statfame'  # Set your summoner name here
+max_matches_to_pull = 122 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
-def fetch_aram_matches():
-    my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
-
+def fetch_aram_matches(max_matches):
     aram_matches = []
+    start = 0
+    count = 100  # Maximum allowed value
 
-    # Fetch match details and check if it's an ARAM match (queueId == 450)
-    for match_id in my_matches:
+    while len(aram_matches) < max_matches:
         try:
-            match_details = lol_watcher.match.by_id(my_region, match_id)
-            if match_details['info']['queueId'] == 450:
-                aram_matches.append(match_details)
+            my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'], start=start, count=count)
         except ApiError as e:
-            print(f"Error fetching match {match_id}: {e}")
+            print(f"Error fetching matchlist: {e}")
+            break  # Exit the loop if an error occurs
+
+        if not my_matches:
+            break  # Exit the loop if the list is empty
+
+        # Fetch match details and check if it's an ARAM match (queueId == 450)
+        for match_id in my_matches:
+            try:
+                match_details = lol_watcher.match.by_id(my_region, match_id)
+                if match_details['info']['queueId'] == 450:
+                    aram_matches.append(match_details)
+            except ApiError as e:
+                print(f"Error fetching match {match_id}: {e}")
+
+            if len(aram_matches) >= max_matches:
+                break
+        
+        start += count  # Increase the start index for the next iteration
 
     return aram_matches
+
 def calculate_total_rank_grade(total_rank_score):
     if total_rank_score >= 210:
         return 'S+'
@@ -92,7 +109,7 @@ def calculate_rank(participant, game_duration, metrics, weights):
 
     return rank
 
-aram_matches = fetch_aram_matches()
+aram_matches = fetch_aram_matches(max_matches_to_pull)
 
 # Create a "matches" folder if it doesn't exist
 matches_folder = "matches"
@@ -166,40 +183,41 @@ if aram_matches:
             for participant in participants:
                 participant_puuid = participant['puuid']
                 if participant_puuid == me['puuid']:
-
                     
                     # Fetch these metrics without adding them to any calculations, yet.
-                    penta_kills = participant['pentaKills']
-                    quadra_kills = participant['quadraKills']
-                    triple_kills = participant['tripleKills']
-                    double_kills = participant['doubleKills']
-                    skillshots_hit = participant['challenges']['skillshotsHit']
-                    killing_sprees = participant['killingSprees']
-                    longest_time_spent_living = participant['longestTimeSpentLiving']
+                    penta_kills = participant.get('pentaKills', 0)
+                    quadra_kills = participant.get('quadraKills', 0)
+                    triple_kills = participant.get('tripleKills', 0)
+                    double_kills = participant.get('doubleKills', 0)
+                    skillshots_hit = participant.get('challenges', {}).get('skillshotsHit', 0)
+                    killing_sprees = participant.get('killingSprees', 0)
+                    longest_time_spent_living = participant.get('longestTimeSpentLiving', 0)
+
 
                     # Calculate metrics for the participant
                     kda_score = calculate_kda_score(participant)
-                    damage_per_min = participant['totalDamageDealt'] / game_duration
-                    gold_per_min = participant['goldEarned'] / game_duration
-                    kill_participation = participant['challenges']['killParticipation']
-                    team_damage_percentage = participant['challenges']['teamDamagePercentage']
-                    damage_taken_percentage = participant['challenges']['damageTakenOnTeamPercentage']
+                    damage_per_min = participant.get('totalDamageDealt', 0) / game_duration
+                    gold_per_min = participant.get('goldEarned', 0) / game_duration
+                    kill_participation = participant.get('challenges', {}).get('killParticipation', 0)
+                    team_damage_percentage = participant.get('challenges', {}).get('teamDamagePercentage', 0)
+                    damage_taken_percentage = participant.get('challenges', {}).get('damageTakenOnTeamPercentage', 0)
+
                     
                     # Define the metrics list
                     metrics = [
                         kda_score,
-                        participant['kills'],
-                        -participant['deaths'],
-                        participant['assists'],
+                        participant.get('kills', 0),
+                        -participant.get('deaths', 0),
+                        participant.get('assists', 0),
                         damage_per_min,
                         gold_per_min,
                         kill_participation,
                         team_damage_percentage,
                         -damage_taken_percentage,
-                        participant['challenges']['killParticipation'],
-                        participant['challenges']['teamDamagePercentage'],
-                        -participant['challenges']['damageTakenOnTeamPercentage']
-                    ]
+                        participant.get('challenges', {}).get('killParticipation', 0),
+                        participant.get('challenges', {}).get('teamDamagePercentage', 0),
+                        -participant.get('challenges', {}).get('damageTakenOnTeamPercentage', 0)
+]
                     # Define weights for each metric
                     weights = [4, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
                     # Append calculation details for each metric
@@ -242,9 +260,9 @@ if aram_matches:
                     print(f"Damage Dealt: \033[34m{participant['totalDamageDealt']}\033[0m")
                     print(f"Gold Earned: \033[34m{participant['goldEarned']}\033[0m")
                     print(f"Damage per min: \033[34m{damage_per_min:.2f}\033[0m")
-                    print(f"Kill participation: \033[34m{participant['challenges']['killParticipation'] * 100:.2f}%\033[0m")
-                    print(f"Team Damage Perc: \033[34m{participant['challenges']['teamDamagePercentage'] * 100:.2f}%\033[0m")
-                    print(f"Damage Taken On Team Perc: \033[34m{participant['challenges']['damageTakenOnTeamPercentage'] * 100:.2f}%\033[0m")
+                    print(f"Kill participation: \033[34m{participant.get('challenges', {}).get('killParticipation', 0) * 100:.2f}%\033[0m")
+                    print(f"Team Damage Perc: \033[34m{participant.get('challenges', {}).get('teamDamagePercentage', 0) * 100:.2f}%\033[0m")
+                    print(f"Damage Taken On Team Perc: \033[34m{participant.get('challenges', {}).get('damageTakenOnTeamPercentage', 0) * 100:.2f}%\033[0m")
                     
                     # Increment the combined totals and averages
                     total_wins += int(participant['win'])
@@ -325,5 +343,3 @@ print(f"Damage Dealt Total: \033[34m{total_damage_dealt}\033[0m | Average: \033[
 print(f"Gold Earned Total: \033[34m{total_gold_earned}\033[0m | Average: \033[34m{average_gold_earned:.2f}\033[0m")
 print(f"Game Duration Total: \033[34m{total_game_duration // 60} minutes\033[0m | Average: \033[34m{average_game_duration // 60} minutes\033[0m")
 print("===============================")
-
-
