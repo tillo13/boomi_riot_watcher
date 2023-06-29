@@ -23,7 +23,7 @@ riot_api_key = get_env_variable('RIOT_API_KEY')
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
-summoner_name = 'britney phi'  # Set your summoner name here
+summoner_name = 'statfame'  # Set your summoner name here
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -42,6 +42,37 @@ def fetch_aram_matches():
             print(f"Error fetching match {match_id}: {e}")
 
     return aram_matches
+def calculate_total_rank_grade(total_rank_score):
+    if total_rank_score >= 210:
+        return 'S+'
+    elif total_rank_score >= 200:
+        return 'S'
+    elif total_rank_score >= 190:
+        return 'S-'
+    elif total_rank_score >= 180:
+        return 'A+'
+    elif total_rank_score >= 170:
+        return 'A'
+    elif total_rank_score >= 160:
+        return 'A-'
+    elif total_rank_score >= 150:
+        return 'B+'
+    elif total_rank_score >= 140:
+        return 'B'
+    elif total_rank_score >= 130:
+        return 'B-'
+    elif total_rank_score >= 120:
+        return 'C+'
+    elif total_rank_score >= 110:
+        return 'C'
+    elif total_rank_score >= 100:
+        return 'C-'
+    elif total_rank_score >= 90:
+        return 'D+'
+    elif total_rank_score >= 80:
+        return 'D'
+    else:
+        return 'D-'
 
 def calculate_kda_score(participant):
     kda = (participant['kills'] + participant['assists']) / participant['deaths'] if participant['deaths'] > 0 else 0
@@ -198,6 +229,9 @@ if aram_matches:
                     
                     print(f"Estimated Rank: \033[34m{rank}\033[0m")
                     print(f"Total rank score: \033[33m{metrics[-1]}\033[0m")  # Print in yellow
+                    total_rank_grade = calculate_total_rank_grade(metrics[-1])
+                    # Display the total grade rank
+                    print(f"Total rank grade: \033[34m{total_rank_grade}\033[0m")
                     #print(f"KDA Score: {kda_score:.2f}")
                     print(f"Win: \033[34m{participant['win']}\033[0m")
                     print(f"Champion: \033[33m{participant['championName']} (\033[0mlvl: \033[33m{participant['champLevel']}\033[0m, \033[0mexp: \033[33m{participant['champExperience']}\033[0m)\033[0m")
