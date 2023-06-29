@@ -3,6 +3,7 @@ import json
 from riotwatcher import LolWatcher, ApiError
 from dotenv import load_dotenv
 from datetime import datetime
+from scipy.stats import percentileofscore
 
 load_dotenv()
 
@@ -48,6 +49,60 @@ total_damage_dealt = 0
 total_gold_earned = 0
 total_game_duration = 0
 
+def calculate_rank(participant, game_duration):
+    rank = ''
+
+    # Calculate metrics
+    kda = (participant['kills'] + participant['assists']) / participant['deaths'] if participant['deaths'] > 0 else 0
+    damage_per_min = participant['totalDamageDealt'] / game_duration
+    gold_per_min = participant['goldEarned'] / game_duration
+    kill_participation = participant['challenges']['killParticipation']
+    team_damage_percentage = participant['challenges']['teamDamagePercentage']
+    damage_taken_percentage = participant['challenges']['damageTakenOnTeamPercentage']
+
+    metrics = [
+        kda,
+        participant['kills'],
+        -participant['deaths'],
+        participant['assists'],
+        damage_per_min,
+        gold_per_min,
+        kill_participation,
+        team_damage_percentage,
+        -damage_taken_percentage
+    ]
+    weights = [3, 1, -1, 1, 1, 1, 2, 2, -1]
+
+    # Calculate weighted rank score
+    rank_score = sum(m * w for m, w in zip(metrics, weights))
+
+    # Define rank score ranges based on estimated scores
+    rank_score_ranges = {
+        'S+': (percentileofscore(metrics, 15), float('inf')),
+        'S': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
+        'S-': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
+        'A+': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
+        'A': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
+        'A-': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
+        'B+': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
+        'B': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
+        'B-': (0, percentileofscore(metrics, 1)),
+        'C+': (-percentileofscore(metrics, 1), 0),
+        'C': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
+        'C-': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
+        'D+': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
+        'D': (-percentileofscore(metrics, 9), -percentileofscore(metrics, 7)),
+        'D-': (-percentileofscore(metrics, 11), -percentileofscore(metrics, 9))
+    }
+
+    # Determine the rank
+    for rank, score_range in sorted(rank_score_ranges.items(), key=lambda x: x[1][0], reverse=True):
+        lower_bound, upper_bound = score_range
+        if lower_bound <= rank_score < upper_bound:
+            return rank
+
+
+
 # Save the match details as JSON files in the "matches" folder
 if aram_matches:
     for match in aram_matches:
@@ -77,6 +132,10 @@ if aram_matches:
             for participant in participants:
                 participant_puuid = participant['puuid']
                 if participant_puuid == me['puuid']:
+
+                    # Here we calculate and print the rank
+                    rank = calculate_rank(participant, game_duration)
+                    print(f"Estimated Rank: \033[34m{rank}\033[0m")
                     print(f"Win: \033[34m{participant['win']}\033[0m")
                     print(f"Champion: \033[34m{participant['championName']}\033[0m")
 
