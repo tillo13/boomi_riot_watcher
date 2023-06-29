@@ -17,9 +17,12 @@ aram_matches = []
 
 # Fetch match details and check if it's an ARAM match (queueId == 450)
 for match_id in my_matches:
-    match_details = lol_watcher.match.by_id(my_region, match_id)
-    if match_details['info']['queueId'] == 450:
-        aram_matches.append(match_details)
+    try:
+        match_details = lol_watcher.match.by_id(my_region, match_id)
+        if match_details['info']['queueId'] == 450:
+            aram_matches.append(match_details)
+    except ApiError as e:
+        print(f"Error fetching match {match_id}: {e}")
 
 # Create a "matches" folder if it doesn't exist
 matches_folder = "matches"
@@ -40,9 +43,7 @@ total_deaths = 0
 total_assists = 0
 total_damage_dealt = 0
 total_gold_earned = 0
-total_objective_control = 0
-total_turret_damage = 0
-total_survival_time = 0
+total_game_duration = 0
 
 # Save the match details as JSON files in the "matches" folder
 if aram_matches:
@@ -53,31 +54,40 @@ if aram_matches:
         else:
             # Convert the match details to a JSON-compatible format
             match_json = json.loads(json.dumps(match))
-            
+
             with open(file_name, 'w') as file:
                 json.dump(match_json, file)
-            
-            print(f"Saved new match: {file_name}")
-            
+
+            match_id = match['metadata']['matchId']
+            game_duration = match['info']['gameDuration']
+            print("===============================")
+            print(f"Match ID: \033[34m{match_id}\033[0m")
+            print(f"Game Duration: \033[34m{game_duration // 60} minutes\033[0m")
+            print(f"Saved as: \033[34m{file_name}\033[0m")
+            print("Specific metrics for \033[32mCardyflower\033[0m:")
+
             # Display individual metrics for the match
             participants = match['info']['participants']
             for participant in participants:
                 participant_puuid = participant['puuid']
                 if participant_puuid == me['puuid']:
-                    print("Metrics for Cardyflower:")
-                    print(f"Win: {participant['win']}")
-                    print(f"Champion: {participant['championName']}")
-                    print(f"Kills: {participant['kills']}")
-                    print(f"Deaths: {participant['deaths']}")
-                    print(f"Assists: {participant['assists']}")
-                    print(f"KDA: {(participant['kills'] + participant['assists']) / participant['deaths']:.2f}")
-                    print(f"Damage Dealt: {participant['totalDamageDealt']}")
-                    print(f"Gold Earned: {participant['goldEarned']}")
-                    print(f"Objective Control: {participant['objectivesStolen']}")
-                    print(f"Turret Damage: {participant['damageDealtToTurrets']}")
-                    print(f"Survival Time: {participant['totalTimeSpentDead']} seconds")
+                    print(f"Win: \033[34m{participant['win']}\033[0m")
+                    print(f"Champion: \033[34m{participant['championName']}\033[0m")
+                    print(f"Kills: \033[34m{participant['kills']}\033[0m")
+                    print(f"Deaths: \033[34m{participant['deaths']}\033[0m")
+                    print(f"Assists: \033[34m{participant['assists']}\033[0m")
+                    try:
+                        kda = (participant['kills'] + participant['assists']) / participant['deaths']
+                    except ZeroDivisionError:
+                        kda = 0.0
+                    print(f"KDA: \033[34m{kda:.2f}\033[0m")
+                    print(f"Kills per Minute: \033[34m{participant['kills'] / (game_duration / 60):.2f}\033[0m")
+                    print(f"Deaths per Minute: \033[34m{participant['deaths'] / (game_duration / 60):.2f}\033[0m")
+                    print(f"Assists per Minute: \033[34m{participant['assists'] / (game_duration / 60):.2f}\033[0m")
+                    print(f"Damage Dealt: \033[34m{participant['totalDamageDealt']}\033[0m")
+                    print(f"Gold Earned: \033[34m{participant['goldEarned']}\033[0m")
                     print("===============================")
-                    
+
                     # Update combined totals
                     total_wins += int(participant['win'])
                     total_kills += participant['kills']
@@ -85,32 +95,27 @@ if aram_matches:
                     total_assists += participant['assists']
                     total_damage_dealt += participant['totalDamageDealt']
                     total_gold_earned += participant['goldEarned']
-                    total_objective_control += participant['objectivesStolen']
-                    total_turret_damage += participant['damageDealtToTurrets']
-                    total_survival_time += participant['totalTimeSpentDead']
-                    
+                    total_game_duration += game_duration
+
     # Calculate averages
     average_kills = total_kills / total_matches
     average_deaths = total_deaths / total_matches
     average_assists = total_assists / total_matches
-    average_damage_dealt = total_damage_dealt / total_matches
-    average_gold_earned = total_gold_earned / total_matches
-    average_objective_control = total_objective_control / total_matches
-    average_turret_damage = total_turret_damage / total_matches
-    average_survival_time = total_survival_time / total_matches
-    
+    average_kpm = total_kills / (total_game_duration / 60)
+    average_dpm = total_deaths / (total_game_duration / 60)
+    average_apm = total_assists / (total_game_duration / 60)
+
     # Display combined totals and averages
-    print("Combined Metrics for Cardyflower:")
-    print(f"Total Matches: {total_matches}")
-    print(f"Total Wins: {total_wins}")
-    print(f"Average Kills: {average_kills}")
-    print(f"Average Deaths: {average_deaths}")
-    print(f"Average Assists: {average_assists}")
-    print(f"Average KDA: {(average_kills + average_assists) / average_deaths:.2f}")
-    print(f"Average Damage Dealt: {average_damage_dealt}")
-    print(f"Average Gold Earned: {average_gold_earned}")
-    print(f"Average Objective Control: {average_objective_control}")
-    print(f"Average Turret Damage: {average_turret_damage}")
-    print(f"Average Survival Time: {average_survival_time} seconds")
+    print("===============================")
+    print("Combined Metrics for \033[32mCardyflower:\033[0m")
+    print(f"Total Matches: \033[32m{total_matches}\033[0m")
+    print(f"Total Wins: \033[32m{total_wins}\033[0m")
+    print(f"Average Kills:\033[32m{average_kills:.2f}\033[0m")
+    print(f"Average Deaths: \033[32m{average_deaths:.2f}\033[0m")
+    print(f"Average Assists: \033[32m{average_assists:.2f}\033[0m")
+    print(f"Average Kills per Minute: \033[32m{average_kpm:.2f}\033[0m")
+    print(f"Average Deaths per Minute: \033[32m{average_dpm:.2f}\033[0m")
+    print(f"Average Assists per Minute: \033[32m{average_apm:.2f}\033[0m")
+    print("===============================")
 else:
     print("No ARAM matches found.")
