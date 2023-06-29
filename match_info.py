@@ -12,18 +12,15 @@ debug_mode = False  # Set to True to show calculation details, False to hide the
 KDA_WEIGHT = 10  # Change this value to tweak the value KDA has on the summoners Total Rank score.  
 #In the case of KDA_WEIGHT being 1, the total sum of the weights (including `KDA_WEIGHT`) would be 10. Therefore, the KDA Score would contribute 10% (1 out of 10) of the total weight.  Alternatively if KDA_WEIGHT is set to 10, it would contribute over half (10 out of 19, or approximately 52.63%) of the total weight. 
 
-def get_env_variable(name):
-    try:
-        return os.environ[name]
-    except KeyError:
-        raise RuntimeError(f"The environment variable '{name}' is not set.")
+riot_api_key = os.getenv('RIOT_API_KEY')
 
-riot_api_key = get_env_variable('RIOT_API_KEY')
+if not riot_api_key:
+    raise RuntimeError("The environment variable 'RIOT_API_KEY' is not set.")
 
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
-summoner_name = 'statfame'  # Set your summoner name here
+summoner_name = 'britney phi'  # Set your summoner name here
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -89,7 +86,6 @@ def calculate_kda_score(participant):
 def calculate_rank(participant, game_duration, metrics, weights):
     rank = ''
     weights[0] = KDA_WEIGHT
-
     weights = [KDA_WEIGHT, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
     rank_score = sum(m * w for m, w in zip(metrics, weights))
     metrics.append(rank_score)
@@ -115,6 +111,13 @@ total_assists = 0
 total_damage_dealt = 0
 total_gold_earned = 0
 total_game_duration = 0
+total_penta_kills = 0
+total_quadra_kills = 0
+total_triple_kills = 0
+total_double_kills = 0
+total_skillshots_hit = 0
+total_killing_sprees = 0
+total_longest_time_spent_living = 0
 
 # Define the names of the metrics
 metric_names = [
@@ -163,6 +166,17 @@ if aram_matches:
             for participant in participants:
                 participant_puuid = participant['puuid']
                 if participant_puuid == me['puuid']:
+
+                    
+                    # Fetch these metrics without adding them to any calculations, yet.
+                    penta_kills = participant['pentaKills']
+                    quadra_kills = participant['quadraKills']
+                    triple_kills = participant['tripleKills']
+                    double_kills = participant['doubleKills']
+                    skillshots_hit = participant['challenges']['skillshotsHit']
+                    killing_sprees = participant['killingSprees']
+                    longest_time_spent_living = participant['longestTimeSpentLiving']
+
                     # Calculate metrics for the participant
                     kda_score = calculate_kda_score(participant)
                     damage_per_min = participant['totalDamageDealt'] / game_duration
@@ -218,6 +232,13 @@ if aram_matches:
                         kda = 0.0
                     
                     print(f"KDA: \033[34m{kda:.2f}\033[0m")
+                    print(f"Penta Kills: \033[34m{penta_kills}\033[0m")
+                    print(f"Quadra Kills: \033[34m{quadra_kills}\033[0m")
+                    print(f"Triple Kills: \033[34m{triple_kills}\033[0m")
+                    print(f"Double Kills: \033[34m{double_kills}\033[0m")
+                    print(f"Skillshots Hit: \033[34m{skillshots_hit}\033[0m")
+                    print(f"Killing Sprees: \033[34m{killing_sprees}\033[0m")
+                    print(f"Longest Time Spent Living: \033[34m{longest_time_spent_living} seconds\033[0m")
                     print(f"Damage Dealt: \033[34m{participant['totalDamageDealt']}\033[0m")
                     print(f"Gold Earned: \033[34m{participant['goldEarned']}\033[0m")
                     print(f"Damage per min: \033[34m{damage_per_min:.2f}\033[0m")
@@ -233,6 +254,13 @@ if aram_matches:
                     total_damage_dealt += participant['totalDamageDealt']
                     total_gold_earned += participant['goldEarned']
                     total_game_duration += game_duration
+                    total_penta_kills += penta_kills
+                    total_quadra_kills += quadra_kills
+                    total_triple_kills += triple_kills
+                    total_double_kills += double_kills
+                    total_skillshots_hit += skillshots_hit
+                    total_killing_sprees += killing_sprees
+                    total_longest_time_spent_living += longest_time_spent_living
 
             # Display the calculation details for the match
             if debug_mode:
@@ -240,12 +268,8 @@ if aram_matches:
                 for detail in calculation_details:
                     print(detail)
                 print(f"KDA Score: {kda_score:.2f}")
-                print("- - - -calculations details end- - - -")
-            
+                print("- - - -calculations details end- - - -")   
 
-
-
-            
     else:
         print("No new ARAM matches found.")
 else:
@@ -259,24 +283,30 @@ average_assists = total_assists / total_matches
 average_damage_dealt = total_damage_dealt / total_matches
 average_gold_earned = total_gold_earned / total_matches
 average_game_duration = total_game_duration / total_matches
-
+average_penta_kills = total_penta_kills / total_matches
+average_quadra_kills = total_quadra_kills / total_matches
+average_triple_kills = total_triple_kills / total_matches
+average_double_kills = total_double_kills / total_matches
+average_skillshots_hit = total_skillshots_hit / total_matches
+average_killing_sprees = total_killing_sprees / total_matches
+average_longest_time_spent_living = total_longest_time_spent_living / total_matches
 
 # Display the combined totals and averages
 print("===============================")
-print(f"Combined Totals for: \033[32m{summoner_name}\033[0m")
-print(f"Total matches: \033[34m{total_matches}\033[0m")
+print(f"Totals/Averages for: \033[32m{summoner_name}\033[0m")
+print(f"Total matches in query: \033[34m{total_matches}\033[0m")
 print(f"Total wins: \033[34m{total_wins}\033[0m (\033[34m{average_wins:.2f}%\033[0m)")
-print(f"Total kills: \033[34m{total_kills}\033[0m")
-print(f"Total deaths: \033[34m{total_deaths}\033[0m")
-print(f"Total assists: \033[34m{total_assists}\033[0m")
-print(f"Total damage dealt: \033[34m{total_damage_dealt}\033[0m")
-print(f"Total gold earned: \033[34m{total_gold_earned}\033[0m")
-print(f"Total game duration: \033[34m{total_game_duration // 60} minutes\033[0m")
-print(f"Combined Averages for: \033[32m{summoner_name}\033[0m")
-print(f"Average kills: \033[34m{average_kills:.2f}\033[0m")
-print(f"Average deaths: \033[34m{average_deaths:.2f}\033[0m")
-print(f"Average assists: \033[34m{average_assists:.2f}\033[0m")
-print(f"Average damage dealt: \033[34m{average_damage_dealt:.2f}\033[0m")
-print(f"Average gold earned: \033[34m{average_gold_earned:.2f}\033[0m")
-print(f"Average game duration: \033[34m{average_game_duration // 60} minutes\033[0m")
+print(f"Total kills: \033[34m{total_kills}\033[0m | Average Kills: \033[34m{average_kills:.2f}\033[0m")
+print(f"Total deaths: \033[34m{total_deaths}\033[0m | Average Deaths: \033[34m{average_deaths:.2f}\033[0m")
+print(f"Total assists: \033[34m{total_assists}\033[0m | Average Assists: \033[34m{average_assists:.2f}\033[0m")
+print(f"Total Penta Kills: \033[34m{total_penta_kills}\033[0m | Average Penta Kills: \033[34m{average_penta_kills:.2f}\033[0m")
+print(f"Total Quadra Kills: \033[34m{total_quadra_kills}\033[0m | Average Quadra Kills: \033[34m{average_quadra_kills:.2f}\033[0m")
+print(f"Total Triple Kills: \033[34m{total_triple_kills}\033[0m | Average Triple Kills: \033[34m{average_triple_kills:.2f}\033[0m")
+print(f"Total Double Kills: \033[34m{total_double_kills}\033[0m | Average Double Kills: \033[34m{average_double_kills:.2f}\033[0m")
+print(f"Total Skillshots Hit: \033[34m{total_skillshots_hit}\033[0m | Average Skillshots Hit: \033[34m{average_skillshots_hit:.2f}\033[0m")
+print(f"Total Killing Sprees: \033[34m{total_killing_sprees}\033[0m | Average Killing Sprees: \033[34m{average_killing_sprees:.2f}\033[0m")
+print(f"Total Longest Time Spent Living: \033[34m{total_longest_time_spent_living} seconds\033[0m | Average Longest Time Spent Living: \033[34m{average_longest_time_spent_living:.2f} seconds\033[0m")
+print(f"Total damage dealt: \033[34m{total_damage_dealt}\033[0m | Average damage dealt: \033[34m{average_damage_dealt:.2f}\033[0m")
+print(f"Total gold earned: \033[34m{total_gold_earned}\033[0m | Average gold earned: \033[34m{average_gold_earned:.2f}\033[0m")
+print(f"Total game duration: \033[34m{total_game_duration // 60} minutes\033[0m | Average game duration: \033[34m{average_game_duration // 60} minutes\033[0m")
 print("===============================")
