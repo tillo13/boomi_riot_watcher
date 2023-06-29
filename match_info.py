@@ -291,10 +291,25 @@ average_skillshots_hit = total_skillshots_hit / total_matches
 average_killing_sprees = total_killing_sprees / total_matches
 average_longest_time_spent_living = total_longest_time_spent_living / total_matches
 
+# Prepare the dates
+match_dates = [datetime.fromtimestamp(match['info']['gameCreation'] / 1000) for match in aram_matches]
+oldest_match_date = min(match_dates)
+newest_match_date = max(match_dates)
+
+# Calculate the time difference
+time_diff = newest_match_date - oldest_match_date
+time_diff_days = time_diff.days
+time_diff_hours = time_diff.seconds // 3600
+time_diff_minutes = (time_diff.seconds // 60) % 60
+time_diff_seconds = time_diff.seconds % 60
+
 # Display the combined totals and averages
 print("===============================")
 print("========Totals/Averages========")
 print(f"Totals/Averages for: \033[32m{summoner_name}\033[0m")
+print(f"Oldest MatchID datetime queried: \033[34m{oldest_match_date}\033[0m")
+print(f"Newest MatchID datetime queried: \033[34m{newest_match_date}\033[0m")
+print(f"Time difference between oldest and newest MatchID: \033[34m{time_diff_days} days, {time_diff_hours} hours, {time_diff_minutes} minutes, {time_diff_seconds} seconds\033[0m")
 print(f"Total matches in query: \033[34m{total_matches}\033[0m")
 print(f"Kills Total: \033[34m{total_kills}\033[0m | Average: \033[34m{average_kills:.2f}\033[0m")
 print(f"Deaths Total: \033[34m{total_deaths}\033[0m | Average: \033[34m{average_deaths:.2f}\033[0m")
