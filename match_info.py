@@ -4,17 +4,17 @@ from riotwatcher import LolWatcher, ApiError
 from dotenv import load_dotenv
 from datetime import datetime
 from scipy.stats import percentileofscore
+import shutil
 
 load_dotenv()
+riot_api_key = os.getenv('RIOT_API_KEY')
 
-lol_watcher = LolWatcher(os.getenv('RIOT_API_KEY'))
+lol_watcher = LolWatcher(riot_api_key)
 
 my_region = 'na1'
-
-summonerName = 'cardyflower'  # Set your summoner name here
+summonerName = 'britney phi'  # Set your summoner name here
 
 me = lol_watcher.summoner.by_name(my_region, summonerName)
-
 my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
 
 aram_matches = []
@@ -33,11 +33,8 @@ matches_folder = "matches"
 if not os.path.exists(matches_folder):
     os.makedirs(matches_folder)
 else:
-    # Delete existing .json files in the "matches" directory
-    for file_name in os.listdir(matches_folder):
-        if file_name.endswith(".json"):
-            file_path = os.path.join(matches_folder, file_name)
-            os.remove(file_path)
+    shutil.rmtree(matches_folder)
+    os.makedirs(matches_folder)
 
 # Initialize variables for combined totals and averages
 total_matches = len(aram_matches)
@@ -49,59 +46,84 @@ total_damage_dealt = 0
 total_gold_earned = 0
 total_game_duration = 0
 
-def calculate_rank(participant, game_duration):
+# Define the names of the metrics
+metric_names = [
+  "KDA Score",
+  "Kills",
+  "Death count (negative)",
+  "Assists",
+  "Damage per Minute",
+  "Gold per Minute",
+  "Kill Participation",
+  "Team Damage Percentage",
+  "Damage Taken on Team Percentage (negative)",
+  "Kill Participation",
+  "Team Damage Percentage",
+  "Damage Taken on Team Percentage (negative)"
+]
+
+def calculate_rank(participant, game_duration, metrics):
     rank = ''
 
-    # Calculate metrics
+    # calculate KDA and apply custom logic
     kda = (participant['kills'] + participant['assists']) / participant['deaths'] if participant['deaths'] > 0 else 0
-    damage_per_min = participant['totalDamageDealt'] / game_duration
-    gold_per_min = participant['goldEarned'] / game_duration
-    kill_participation = participant['challenges']['killParticipation']
-    team_damage_percentage = participant['challenges']['teamDamagePercentage']
-    damage_taken_percentage = participant['challenges']['damageTakenOnTeamPercentage']
 
-    metrics = [
-        kda,
-        participant['kills'],
-        -participant['deaths'],
-        participant['assists'],
-        damage_per_min,
-        gold_per_min,
-        kill_participation,
-        team_damage_percentage,
-        -damage_taken_percentage
-    ]
-    weights = [3, 1, -1, 1, 1, 1, 2, 2, -1]
+    if kda > 5:
+        kda_score = 5 + (kda - 5) * 0.25  # Assign a modest increase for KDA above 5
+        kda_calculation = f"5 + ({kda:.2f} - 5) * 0.25 = {kda_score:.2f}"
+    elif kda >= 3:
+        kda_score = 3 + (kda - 3) * 0.1  # Higher increase for KDA between 3 and 5
+        kda_calculation = f"3 + ({kda:.2f} - 3) * 0.5 = {kda_score:.2f}"
+    elif kda >= 1:
+        kda_score = kda
+        kda_calculation = f"{kda:.2f}"
+    else:
+        kda_score = kda * 0.5  # Assign a lower score for KDA below 1
+        kda_calculation = f"{kda:.2f} * 0.5 = {kda_score:.2f}"
+
+    metrics[0] = kda_score  # Replace the first element of metrics (which is KDA Score) with the new KDA score.
+    
+    # Define weights for each metric
+    weights = [4, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
 
     # Calculate weighted rank score
-    rank_score = sum(m * w for m, w in zip(metrics, weights))
+    rank_score = sum(
+        m * w for m, w in zip(metrics, weights)
+    )
 
-    # Define rank score ranges based on estimated scores
+    # Print each metric's contribution to the rank
+    for metric, weight, name in zip(metrics, weights, metric_names):
+        print(f"{name} ({metric} * {weight}): {metric*weight}")
+
+    # Mention rank score
+    print(f"Total rank score: {rank_score}")
+
+    # Define rank score ranges
     rank_score_ranges = {
-        'S+': (percentileofscore(metrics, 15), float('inf')),
-        'S': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
-        'S-': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
-        'A+': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
-        'A': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
-        'A-': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
-        'B+': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
-        'B': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
-        'B-': (0, percentileofscore(metrics, 1)),
-        'C+': (-percentileofscore(metrics, 1), 0),
-        'C': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
-        'C-': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
-        'D+': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
-        'D': (-percentileofscore(metrics, 9), -percentileofscore(metrics, 7)),
-        'D-': (-percentileofscore(metrics, 11), -percentileofscore(metrics, 9))
+        'S+': (percentileofscore(metrics, 18), float('inf')),
+        'S': (percentileofscore(metrics, 15), percentileofscore(metrics, 18)),
+        'S-': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
+        'A+': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
+        'A': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
+        'A-': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
+        'B+': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
+        'B': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
+        'B-': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
+        'C+': (0, percentileofscore(metrics, 1)),
+        'C': (-percentileofscore(metrics, 1), 0),
+        'C-': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
+        'D+': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
+        'D': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
+        'D-': (-float('inf'), -percentileofscore(metrics, 7))
     }
 
     # Determine the rank
     for rank, score_range in sorted(rank_score_ranges.items(), key=lambda x: x[1][0], reverse=True):
         lower_bound, upper_bound = score_range
         if lower_bound <= rank_score < upper_bound:
-            return rank
+            return rank, kda_calculation
 
-
+    return rank, kda_calculation
 
 # Save the match details as JSON files in the "matches" folder
 if aram_matches:
@@ -125,21 +147,46 @@ if aram_matches:
             print(f"Match start date: \033[34m{game_creation_datetime}\033[0m")
             print(f"Game Duration: \033[34m{game_duration // 60} minutes\033[0m")
             print(f"Saved as: \033[34m{file_name}\033[0m")
-            print(f"Specific metrics for \033[32m{summonerName}\033[0m:") 
+            print(f"Specific metrics for \033[32m{summonerName}\033[0m:")
 
             # Display individual metrics for the match
             participants = match['info']['participants']
             for participant in participants:
                 participant_puuid = participant['puuid']
                 if participant_puuid == me['puuid']:
+                    # Calculate metrics for the participant
+                    kda_score = (participant['kills'] + participant['assists']) / participant['deaths'] if participant['deaths'] > 0 else 0
+                    damage_per_min = participant['totalDamageDealt'] / game_duration
+                    gold_per_min = participant['goldEarned'] / game_duration
+                    kill_participation = participant['challenges']['killParticipation']
+                    team_damage_percentage = participant['challenges']['teamDamagePercentage']
+                    damage_taken_percentage = participant['challenges']['damageTakenOnTeamPercentage']
+
+                    # Define the metrics list
+                    metrics = [
+                        kda_score,
+                        participant['kills'],
+                        -participant['deaths'],
+                        participant['assists'],
+                        damage_per_min,
+                        gold_per_min,
+                        kill_participation,
+                        team_damage_percentage,
+                        -damage_taken_percentage,
+                        participant['challenges']['killParticipation'],
+                        participant['challenges']['teamDamagePercentage'],
+                        -participant['challenges']['damageTakenOnTeamPercentage']
+                    ]
 
                     # Here we calculate and print the rank
-                    rank = calculate_rank(participant, game_duration)
-                    print(f"Estimated Rank: \033[34m{rank}\033[0m")
-                    print(f"Win: \033[34m{participant['win']}\033[0m")
-                    print(f"Champion: \033[34m{participant['championName']}\033[0m")
+                    rank, kda_calculation = calculate_rank(participant, game_duration, metrics)
 
-                    # calculate kills, deaths, and assists per minute
+                    print(f"Estimated Rank: \033[34m{rank}\033[0m")
+                    print(f"KDA Calculation: {kda_calculation}")
+                    print(f"Win: \033[34m{participant['win']}\033[0m")
+                    print(f"Champion: \033[33m{participant['championName']} (\033[0mlvl: \033[33m{participant['champLevel']}\033[0m, \033[0mexp: \033[33m{participant['champExperience']}\033[0m)\033[0m")
+
+                    # Calculate kills, deaths, and assists per minute
                     kpm = participant['kills'] / (game_duration / 60)
                     dpm = participant['deaths'] / (game_duration / 60)
                     apm = participant['assists'] / (game_duration / 60)
@@ -155,13 +202,19 @@ if aram_matches:
                     print(f"KDA: \033[34m{kda:.2f}\033[0m")
                     print(f"Damage Dealt: \033[34m{participant['totalDamageDealt']}\033[0m")
                     print(f"Gold Earned: \033[34m{participant['goldEarned']}\033[0m")
-                    print(f"Damage per min: \033[34m{participant['challenges']['damagePerMinute']*1:.2f}\033[0m")
-                    print(f"Kill participation: \033[34m{participant['challenges']['killParticipation']*100:.2f}%\033[0m")
-                    print(f"Team Damage Perc: \033[34m{participant['challenges']['teamDamagePercentage']*100:.2f}%\033[0m")
-                    print(f"Damage Taken On Team Perc: \033[34m{participant['challenges']['damageTakenOnTeamPercentage']*100:.2f}%\033[0m")
-                   
-                    print("===============================")
+                    print(f"Damage per min: \033[34m{damage_per_min:.2f}\033[0m")
+                    print(f"Kill participation: \033[34m{kill_participation*100:.2f}%\033[0m")
+                    print(f"Team Damage Perc: \033[34m{team_damage_percentage*100:.2f}%\033[0m")
+                    print(f"Damage Taken On Team Perc: \033[34m{damage_taken_percentage*100:.2f}%\033[0m")
+                    print(f"Largest Killing Spree: \033[34m{participant['largestKillingSpree']}\033[0m")
+                    print(f"Gold Spent: \033[34m{participant['goldSpent']}\033[0m")
+                    try:
+                        print(f"First Turret Killed Time: \033[34m{participant['challenges']['firstTurretKilledTime']:.2f}\033[0m")
+                    except KeyError:
+                        print("First Turret Killed Time: N/A")
+                    print(f"Damage per minute: \033[34m{participant['challenges']['damagePerMinute']:.2f}\033[0m")
 
+                    print("===============================")
 
                     # Update combined totals
                     total_wins += int(participant['win'])
@@ -173,27 +226,33 @@ if aram_matches:
                     total_game_duration += game_duration
 
     # Calculate averages
-    average_kills = total_kills / total_matches
-    average_deaths = total_deaths / total_matches
-    average_assists = total_assists / total_matches
-    average_kpm = total_kills / (total_game_duration / 60)
-    average_dpm = total_deaths / (total_game_duration / 60)
-    average_apm = total_assists / (total_game_duration / 60)
+        if total_matches > 0:
+            average_kills = total_kills / total_matches
+            average_deaths = total_deaths / total_matches
+            average_assists = total_assists / total_matches
+            average_kpm = total_kills / (total_game_duration / 60)
+            average_dpm = total_deaths / (total_game_duration / 60)
+            average_apm = total_assists / (total_game_duration / 60)
+        else:
+            average_kills = 0
+            average_deaths = 0
+            average_assists = 0
+            average_kpm = 0
+            average_dpm = 0
+            average_apm = 0
 
-    # Display combined totals and averages
-    print("===============================")
-    print("Combined Metrics for \033[32m{}:\033[0m".format(summonerName))
-    print(f"Total Matches: \033[32m{total_matches}\033[0m")
-    print(f"Total Wins: \033[32m{total_wins}\033[0m")
+        # Display combined totals and averages
+        print("===============================")
+        print("Combined Metrics for \033[32m{}:\033[0m".format(summonerName))
+        print(f"Total Matches: \033[32m{total_matches}\033[0m")
+        print(f"Total Wins: \033[32m{total_wins}\033[0m")
+        print(f"Kills: \033[32m{total_kills}\033[0m (average: {average_kills:.2f})")
+        print(f"Deaths: \033[32m{total_deaths}\033[0m (average: {average_deaths:.2f})")
+        print(f"Assists: \033[32m{total_assists}\033[0m (average: {average_assists:.2f})")
+        print(f"Kills per min: \033[32m{average_kpm:.2f}\033[0m")
+        print(f"Deaths per min: \033[32m{average_dpm:.2f}\033[0m")
+        print(f"Assists per min: \033[32m{average_apm:.2f}\033[0m")
+        print("===============================")
 
-    # Calculate overall per-minute averages
-    avg_kpm_total = total_kills / (total_game_duration / 60)
-    avg_dpm_total = total_deaths / (total_game_duration / 60)
-    avg_apm_total = total_assists / (total_game_duration / 60)
-
-    print(f"Kills: \033[32m{total_kills}\033[0m (per min: {avg_kpm_total:.2f})")
-    print(f"Deaths: \033[32m{total_deaths}\033[0m (per min: {avg_dpm_total:.2f})")
-    print(f"Assists: \033[32m{total_assists}\033[0m (per min: {avg_apm_total:.2f})")
-    print("===============================")
 else:
     print("No ARAM matches found.")
