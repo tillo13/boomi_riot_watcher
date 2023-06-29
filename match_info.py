@@ -2,6 +2,7 @@ import os
 import json
 from riotwatcher import LolWatcher, ApiError
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -9,7 +10,9 @@ lol_watcher = LolWatcher(os.getenv('RIOT_API_KEY'))
 
 my_region = 'na1'
 
-me = lol_watcher.summoner.by_name(my_region, 'cardyflower')
+summonerName = 'cardyflower'  # Set your summoner name here
+
+me = lol_watcher.summoner.by_name(my_region, summonerName)
 
 my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
 
@@ -62,9 +65,12 @@ if aram_matches:
             game_duration = match['info']['gameDuration']
             print("===============================")
             print(f"Match ID: \033[34m{match_id}\033[0m")
+            game_creation_timestamp_ms = match['info']['gameCreation']
+            game_creation_datetime = datetime.fromtimestamp(game_creation_timestamp_ms / 1000)  # Python expects seconds
+            print(f"Match start date: \033[34m{game_creation_datetime}\033[0m")
             print(f"Game Duration: \033[34m{game_duration // 60} minutes\033[0m")
             print(f"Saved as: \033[34m{file_name}\033[0m")
-            print("Specific metrics for \033[32mCardyflower\033[0m:")
+            print(f"Specific metrics for \033[32m{summonerName}\033[0m:") 
 
             # Display individual metrics for the match
             participants = match['info']['participants']
@@ -73,20 +79,30 @@ if aram_matches:
                 if participant_puuid == me['puuid']:
                     print(f"Win: \033[34m{participant['win']}\033[0m")
                     print(f"Champion: \033[34m{participant['championName']}\033[0m")
-                    print(f"Kills: \033[34m{participant['kills']}\033[0m")
-                    print(f"Deaths: \033[34m{participant['deaths']}\033[0m")
-                    print(f"Assists: \033[34m{participant['assists']}\033[0m")
+
+                    # calculate kills, deaths, and assists per minute
+                    kpm = participant['kills'] / (game_duration / 60)
+                    dpm = participant['deaths'] / (game_duration / 60)
+                    apm = participant['assists'] / (game_duration / 60)
+
+                    print(f"Kills: \033[34m{participant['kills']}\033[0m (per min: {kpm:.2f})")
+                    print(f"Deaths: \033[34m{participant['deaths']}\033[0m (per min: {dpm:.2f})")
+                    print(f"Assists: \033[34m{participant['assists']}\033[0m (per min: {apm:.2f})")
+
                     try:
                         kda = (participant['kills'] + participant['assists']) / participant['deaths']
                     except ZeroDivisionError:
                         kda = 0.0
                     print(f"KDA: \033[34m{kda:.2f}\033[0m")
-                    print(f"Kills per Minute: \033[34m{participant['kills'] / (game_duration / 60):.2f}\033[0m")
-                    print(f"Deaths per Minute: \033[34m{participant['deaths'] / (game_duration / 60):.2f}\033[0m")
-                    print(f"Assists per Minute: \033[34m{participant['assists'] / (game_duration / 60):.2f}\033[0m")
                     print(f"Damage Dealt: \033[34m{participant['totalDamageDealt']}\033[0m")
                     print(f"Gold Earned: \033[34m{participant['goldEarned']}\033[0m")
+                    print(f"Damage per min: \033[34m{participant['challenges']['damagePerMinute']*1:.2f}\033[0m")
+                    print(f"Kill participation: \033[34m{participant['challenges']['killParticipation']*100:.2f}%\033[0m")
+                    print(f"Team Damage Perc: \033[34m{participant['challenges']['teamDamagePercentage']*100:.2f}%\033[0m")
+                    print(f"Damage Taken On Team Perc: \033[34m{participant['challenges']['damageTakenOnTeamPercentage']*100:.2f}%\033[0m")
+                   
                     print("===============================")
+
 
                     # Update combined totals
                     total_wins += int(participant['win'])
@@ -107,15 +123,18 @@ if aram_matches:
 
     # Display combined totals and averages
     print("===============================")
-    print("Combined Metrics for \033[32mCardyflower:\033[0m")
+    print("Combined Metrics for \033[32m{}:\033[0m".format(summonerName))
     print(f"Total Matches: \033[32m{total_matches}\033[0m")
     print(f"Total Wins: \033[32m{total_wins}\033[0m")
-    print(f"Average Kills:\033[32m{average_kills:.2f}\033[0m")
-    print(f"Average Deaths: \033[32m{average_deaths:.2f}\033[0m")
-    print(f"Average Assists: \033[32m{average_assists:.2f}\033[0m")
-    print(f"Average Kills per Minute: \033[32m{average_kpm:.2f}\033[0m")
-    print(f"Average Deaths per Minute: \033[32m{average_dpm:.2f}\033[0m")
-    print(f"Average Assists per Minute: \033[32m{average_apm:.2f}\033[0m")
+
+    # Calculate overall per-minute averages
+    avg_kpm_total = total_kills / (total_game_duration / 60)
+    avg_dpm_total = total_deaths / (total_game_duration / 60)
+    avg_apm_total = total_assists / (total_game_duration / 60)
+
+    print(f"Kills: \033[32m{total_kills}\033[0m (per min: {avg_kpm_total:.2f})")
+    print(f"Deaths: \033[32m{total_deaths}\033[0m (per min: {avg_dpm_total:.2f})")
+    print(f"Assists: \033[32m{total_assists}\033[0m (per min: {avg_apm_total:.2f})")
     print("===============================")
 else:
     print("No ARAM matches found.")
