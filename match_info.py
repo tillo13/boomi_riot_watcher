@@ -22,18 +22,24 @@ my_region = 'na1'
 summoner_name = 'britney phi'  # Set your summoner name here
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
-my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
 
-aram_matches = []
+def fetch_aram_matches():
+    my_matches = lol_watcher.match.matchlist_by_puuid(my_region, me['puuid'])
 
-# Fetch match details and check if it's an ARAM match (queueId == 450)
-for match_id in my_matches:
-    try:
-        match_details = lol_watcher.match.by_id(my_region, match_id)
-        if match_details['info']['queueId'] == 450:
-            aram_matches.append(match_details)
-    except ApiError as e:
-        print(f"Error fetching match {match_id}: {e}")
+    aram_matches = []
+
+    # Fetch match details and check if it's an ARAM match (queueId == 450)
+    for match_id in my_matches:
+        try:
+            match_details = lol_watcher.match.by_id(my_region, match_id)
+            if match_details['info']['queueId'] == 450:
+                aram_matches.append(match_details)
+        except ApiError as e:
+            print(f"Error fetching match {match_id}: {e}")
+
+    return aram_matches
+
+aram_matches = fetch_aram_matches()
 
 # Create a "matches" folder if it doesn't exist
 matches_folder = "matches"
