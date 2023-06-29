@@ -9,7 +9,7 @@ from riotwatcher import LolWatcher
 load_dotenv()
 
 debug_mode = False  # Set to True to show calculation details, False to hide them
-KDA_WEIGHT = 13  # Change this value to tweak the value KDA has on the summoners Total Rank score.  
+KDA_WEIGHT = 10  # Change this value to tweak the value KDA has on the summoners Total Rank score.  
 #In the case of KDA_WEIGHT being 1, the total sum of the weights (including `KDA_WEIGHT`) would be 10. Therefore, the KDA Score would contribute 10% (1 out of 10) of the total weight.  Alternatively if KDA_WEIGHT is set to 10, it would contribute over half (10 out of 19, or approximately 52.63%) of the total weight. 
 
 def get_env_variable(name):
@@ -88,43 +88,37 @@ def calculate_kda_score(participant):
 
 def calculate_rank(participant, game_duration, metrics, weights):
     rank = ''
-    kda_score = calculate_kda_score(participant)
+#    kda_score = calculate_kda_score(participant)
     weights[0] = KDA_WEIGHT
-    rank_score = sum(m * w for m, w in zip(metrics, weights))
-    metrics.append(rank_score)
+    #rank_score = sum(m * w for m, w in zip(metrics, weights))
+    #metrics.append(rank_score)
 
-    # Define weights for each metric
     weights = [KDA_WEIGHT, 1, -1, 1, 1, 1, 2, 2, -1, 1, 2, -1]
-
-    # Calculate weighted rank score
     rank_score = sum(m * w for m, w in zip(metrics, weights))
     metrics.append(rank_score)
 
+    #rank_score_ranges = {
+    #    'S+': (percentileofscore(metrics, 18), float('inf')),
+    #    'S': (percentileofscore(metrics, 15), percentileofscore(metrics, 18)),
+    #    'S-': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
+    #    'A+': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
+    #    'A': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
+    #    'A-': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
+    #    'B+': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
+    #    'B': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
+    #    'B-': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
+    #    'C+': (0, percentileofscore(metrics, 1)),
+    #    'C': (-percentileofscore(metrics, 1), 0),
+    #    'C-': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
+    #    'D+': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
+    #    'D': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
+    #    'D-': (-float('inf'), -percentileofscore(metrics, 7))
+    #}
 
-    # Define rank score ranges
-    rank_score_ranges = {
-        'S+': (percentileofscore(metrics, 18), float('inf')),
-        'S': (percentileofscore(metrics, 15), percentileofscore(metrics, 18)),
-        'S-': (percentileofscore(metrics, 13), percentileofscore(metrics, 15)),
-        'A+': (percentileofscore(metrics, 11), percentileofscore(metrics, 13)),
-        'A': (percentileofscore(metrics, 9), percentileofscore(metrics, 11)),
-        'A-': (percentileofscore(metrics, 7), percentileofscore(metrics, 9)),
-        'B+': (percentileofscore(metrics, 5), percentileofscore(metrics, 7)),
-        'B': (percentileofscore(metrics, 3), percentileofscore(metrics, 5)),
-        'B-': (percentileofscore(metrics, 1), percentileofscore(metrics, 3)),
-        'C+': (0, percentileofscore(metrics, 1)),
-        'C': (-percentileofscore(metrics, 1), 0),
-        'C-': (-percentileofscore(metrics, 3), -percentileofscore(metrics, 1)),
-        'D+': (-percentileofscore(metrics, 5), -percentileofscore(metrics, 3)),
-        'D': (-percentileofscore(metrics, 7), -percentileofscore(metrics, 5)),
-        'D-': (-float('inf'), -percentileofscore(metrics, 7))
-    }
-
-    # Determine the rank
-    for rank, score_range in sorted(rank_score_ranges.items(), key=lambda x: x[1][0], reverse=True):
-        lower_bound, upper_bound = score_range
-        if lower_bound <= rank_score < upper_bound:
-            return rank
+    #for rank, score_range in sorted(rank_score_ranges.items(), key=lambda x: x[1][0], reverse=True):
+    #    lower_bound, upper_bound = score_range
+    #    if lower_bound <= rank_score < upper_bound:
+    #        return rank
 
     return rank
 
@@ -227,7 +221,6 @@ if aram_matches:
                     # Here we calculate and print the rank
                     rank = calculate_rank(participant, game_duration, metrics, weights)
                     
-                    print(f"Estimated Rank: \033[34m{rank}\033[0m")
                     print(f"Total rank score: \033[33m{metrics[-1]}\033[0m")  # Print in yellow
                     total_rank_grade = calculate_total_rank_grade(metrics[-1])
                     # Display the total grade rank
@@ -313,5 +306,3 @@ print(f"Average damage dealt: \033[34m{average_damage_dealt:.2f}\033[0m")
 print(f"Average gold earned: \033[34m{average_gold_earned:.2f}\033[0m")
 print(f"Average game duration: \033[34m{average_game_duration // 60} minutes\033[0m")
 print("===============================")
-
-
