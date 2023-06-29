@@ -1,13 +1,20 @@
-import os
 import json
-from riotwatcher import LolWatcher
-from dotenv import load_dotenv
+import os
 from datetime import datetime
-from scipy.stats import percentileofscore
+from dotenv import load_dotenv
 import shutil
+from scipy.stats import percentileofscore
+from riotwatcher import LolWatcher
 
 load_dotenv()
-riot_api_key = os.getenv('RIOT_API_KEY')
+
+def get_env_variable(name):
+    try:
+        return os.environ[name]
+    except KeyError:
+        raise RuntimeError(f"The environment variable '{name}' is not set.")
+
+riot_api_key = get_env_variable('RIOT_API_KEY')
 
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
