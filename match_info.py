@@ -25,7 +25,7 @@ lol_watcher = LolWatcher(api_key=riot_api_key)
 my_region = 'na1'
 summoner_name = 'statfame'  # Set your summoner name here
 
-max_matches_to_pull = 10 # the number of matches to fetch
+max_matches_to_pull = 1000 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -352,6 +352,8 @@ print(f"Longest Time Spent Living Total: \033[34m{total_longest_time_spent_livin
 print(f"Damage Dealt Total: \033[34m{total_damage_dealt}\033[0m | Average: \033[34m{average_damage_dealt:.2f}\033[0m")
 print(f"Gold Earned Total: \033[34m{total_gold_earned}\033[0m | Average: \033[34m{average_gold_earned:.2f}\033[0m")
 print(f"Game Duration Total: \033[34m{total_game_duration // 60} minutes\033[0m | Average: \033[34m{average_game_duration // 60} minutes\033[0m")
+print("===============================")
+print("...passing to the json_to_csv.py file to save to a csv. Please hold...")
 print("===============================")
 
 timestamp = start_time.strftime("%Y-%m-%d_%H:%M:%S")
