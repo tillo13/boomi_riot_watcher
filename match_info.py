@@ -23,9 +23,9 @@ if not riot_api_key:
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
-summoner_name = 'jakethetall'  # Set your summoner name here
+summoner_name = 'statfame'  # Set your summoner name here
 
-max_matches_to_pull = 1000 # the number of matches to fetch
+max_matches_to_pull = 10 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
