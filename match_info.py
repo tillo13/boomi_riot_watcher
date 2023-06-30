@@ -23,9 +23,9 @@ if not riot_api_key:
 lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
-summoner_name = 'statfame'  # Set your summoner name here
+summoner_name = 'defnotandy'  # Set your summoner name here
 
-max_matches_to_pull = 1000 # the number of matches to fetch
+max_matches_to_pull = 100 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -317,8 +317,12 @@ average_longest_time_spent_living = total_longest_time_spent_living / total_matc
 
 # Prepare the dates
 match_dates = [datetime.fromtimestamp(match['info']['gameCreation'] / 1000) for match in aram_matches]
-oldest_match_date = min(match_dates)
-newest_match_date = max(match_dates)
+try:
+    oldest_match_date = min(match_dates)
+    newest_match_date = max(match_dates)
+except ValueError:
+    print("No match dates found. Please make sure the summoner name is correct and they have played ARAM matches.")
+    exit(1)  # Exits the script
 
 # Calculate the time difference
 time_diff = newest_match_date - oldest_match_date
