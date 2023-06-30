@@ -4,7 +4,7 @@
 *.iml
 *.env
 .DS_Store
-
+matches/
 
 # Exclude matches directory
 matches/

@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from scipy.stats import percentileofscore
 from riotwatcher import LolWatcher
 
+# Start the timestamp at the beginning of the script
+start_time = datetime.now()
+
 load_dotenv()
 
 debug_mode = False  # Set to True to show calculation details, False to hide them
@@ -21,7 +24,7 @@ lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
 summoner_name = 'statfame'  # Set your summoner name here
-max_matches_to_pull = 122 # the number of matches to fetch
+max_matches_to_pull = 11 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -111,12 +114,14 @@ def calculate_rank(participant, game_duration, metrics, weights):
 
 aram_matches = fetch_aram_matches(max_matches_to_pull)
 
-# Create a "matches" folder if it doesn't exist
-matches_folder = "matches"
-if not os.path.exists(matches_folder):
-    os.makedirs(matches_folder)
-else:
-    shutil.rmtree(matches_folder)
+# Create a "matches" folder if it doesn't exist and a user folder
+user_folder = me["name"].replace(" ","_").lower()  #convert name to lowercase
+matches_folder = os.path.join("matches", user_folder)  # Creates user-specific path in the matches folder
+if os.path.exists(matches_folder):
+    for file_name in os.listdir(matches_folder):
+        if file_name.endswith('.json'):
+            os.remove(os.path.join(matches_folder,file_name))
+else:    
     os.makedirs(matches_folder)
 
 # Initialize variables for combined totals and averages
@@ -342,4 +347,21 @@ print(f"Longest Time Spent Living Total: \033[34m{total_longest_time_spent_livin
 print(f"Damage Dealt Total: \033[34m{total_damage_dealt}\033[0m | Average: \033[34m{average_damage_dealt:.2f}\033[0m")
 print(f"Gold Earned Total: \033[34m{total_gold_earned}\033[0m | Average: \033[34m{average_gold_earned:.2f}\033[0m")
 print(f"Game Duration Total: \033[34m{total_game_duration // 60} minutes\033[0m | Average: \033[34m{average_game_duration // 60} minutes\033[0m")
+print("===============================")
+
+timestamp = start_time.strftime("%Y-%m-%d_%H:%M:%S")
+
+filename = f'{summoner_name}_{timestamp}.csv'
+filename = filename.replace(" ", "_").replace(":", "_").replace("-", "_")
+import subprocess
+subprocess.check_call(["python3", "json_to_csv.py", filename, summoner_name])
+
+# End the timestamp at the end of the script
+end_time = datetime.now()
+
+# Calculate the difference in time
+elapsed_time = end_time - start_time
+
+# Display the elapsed time in the terminal
+print("Execution time:", elapsed_time)
 print("===============================")
