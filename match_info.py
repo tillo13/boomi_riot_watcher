@@ -24,7 +24,8 @@ lol_watcher = LolWatcher(api_key=riot_api_key)
 
 my_region = 'na1'
 summoner_name = 'statfame'  # Set your summoner name here
-max_matches_to_pull = 11 # the number of matches to fetch
+
+max_matches_to_pull = 1000 # the number of matches to fetch
 
 me = lol_watcher.summoner.by_name(my_region, summoner_name)
 
@@ -300,19 +301,19 @@ else:
 
 # Calculate the averages
 average_wins = total_wins / total_matches * 100 if total_matches > 0 else 0
-average_kills = total_kills / total_matches
-average_deaths = total_deaths / total_matches
-average_assists = total_assists / total_matches
-average_damage_dealt = total_damage_dealt / total_matches
-average_gold_earned = total_gold_earned / total_matches
-average_game_duration = total_game_duration / total_matches
-average_penta_kills = total_penta_kills / total_matches
-average_quadra_kills = total_quadra_kills / total_matches
-average_triple_kills = total_triple_kills / total_matches
-average_double_kills = total_double_kills / total_matches
-average_skillshots_hit = total_skillshots_hit / total_matches
-average_killing_sprees = total_killing_sprees / total_matches
-average_longest_time_spent_living = total_longest_time_spent_living / total_matches
+average_kills = total_kills / total_matches if total_matches > 0 else 0
+average_deaths = total_deaths / total_matches if total_matches > 0 else 0
+average_assists = total_assists / total_matches if total_matches > 0 else 0
+average_damage_dealt = total_damage_dealt / total_matches if total_matches > 0 else 0
+average_gold_earned = total_gold_earned / total_matches if total_matches > 0 else 0
+average_game_duration = total_game_duration / total_matches if total_matches > 0 else 0
+average_penta_kills = total_penta_kills / total_matches if total_matches > 0 else 0
+average_quadra_kills = total_quadra_kills / total_matches if total_matches > 0 else 0
+average_triple_kills = total_triple_kills / total_matches if total_matches > 0 else 0
+average_double_kills = total_double_kills / total_matches if total_matches > 0 else 0
+average_skillshots_hit = total_skillshots_hit / total_matches if total_matches > 0 else 0
+average_killing_sprees = total_killing_sprees / total_matches if total_matches > 0 else 0
+average_longest_time_spent_living = total_longest_time_spent_living / total_matches if total_matches > 0 else 0
 
 # Prepare the dates
 match_dates = [datetime.fromtimestamp(match['info']['gameCreation'] / 1000) for match in aram_matches]
