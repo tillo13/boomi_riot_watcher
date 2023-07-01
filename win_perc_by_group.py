@@ -48,8 +48,17 @@ for root, dirs, files in os.walk(match_dir):
                 # Load match data from the JSON file
                 match = json.load(open(os.path.join(root, filename), 'r'))
 
+                # Check if 'metadata' exists in the match data
+                if 'metadata' not in match:
+                    print(f"Skipping match {filename} due to missing 'metadata'")
+                    continue
+
                 # Extract the match ID from the match data
-                match_id = match['metadata']['matchId']
+                try:
+                    match_id = match['metadata']['matchId']
+                except KeyError:
+                    print(f"Skipping match {filename} due to missing 'matchId' in 'metadata'")
+                    continue
 
                 # If the match has already been processed, skip to the next file
                 if match_id in handled_matches:
