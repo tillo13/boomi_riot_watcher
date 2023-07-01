@@ -1,4 +1,4 @@
-# This script analyzes match data json files for a list of league player names.
+# This script analyzes match data json files for a list of league player names. Add your summoners in line 17(ish)
 # It requires the following dependencies: os, json, itertools, pytz, datetime, tabulate.
 # The script traverses a directory containing match data files and performs the following tasks:
 
