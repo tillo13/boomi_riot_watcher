@@ -1,3 +1,6 @@
+# This script converts multiple riot API league JSON files into a single CSV file.
+# It requires the following dependencies: pandas, os, json, sys, datetime.
+
 import pandas as pd
 import os
 import json
@@ -22,15 +25,27 @@ def flatten_json(y):
     flatten(y)
     return out
 
-default_time = datetime.datetime.now()
-default_timestamp = default_time.strftime("%Y_%m_%d_%H_%M_%S")
-
 if len(sys.argv) > 1:
     output_filename = sys.argv[1]
     user_folder = sys.argv[2].replace(" ", "_").lower()  
 else:
-    output_filename = f"default_{default_timestamp}.csv"
-    user_folder = 'default'
+    output_filename = "default.csv"
+    user_folder = 'defaulttest'
+
+    os.makedirs(os.path.join("matches", user_folder), exist_ok=True)
+    
+    test_data = {
+      "name": "John",
+      "age": 30,
+      "cars": {
+        "car1": "Ford",
+        "car2": "BMW",
+        "car3": "Fiat"
+      }
+     } 
+
+    with open(os.path.join("matches", user_folder, "test.json"), 'w') as f:
+        json.dump(test_data, f)
 
 directory = os.path.join("matches", user_folder)
 df = pd.DataFrame()
@@ -46,8 +61,6 @@ for json_filename in os.listdir(directory):
         except Exception as e:  
             print(f"Failed to process file {json_filename}. Reason: {e}")
 
-output_dir = directory
-output_filepath = os.path.join(output_dir, output_filename)
-df.to_csv(output_filepath, index=False)
+df.to_csv(os.path.join(directory, output_filename), index=False)
 
 print(f"All .json files have been successfully converted into a single .csv file named {output_filename} in the {directory} directory.")
