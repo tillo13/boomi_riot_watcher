@@ -23,7 +23,8 @@ This script requires the following environment variable to be set up:
   
 # How to use
 
-Set up the `RIOT_API_KEY` as an environment variable in your system. Then, run `python3 your_script_name.py`.
+Set up the `RIOT_API_KEY` as an environment variable in your system. 
+Then, run `python riot_lol_query_matches_save_json.py`.  This saves all the files to your local machine as JSON files, in a "matches" directory.
 
 Replace `'username'` in the script with your Summoner Name to fetch your own ARAM matches data.
 
