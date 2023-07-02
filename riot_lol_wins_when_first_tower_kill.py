@@ -123,22 +123,34 @@ for combination in player_combinations:
     if games > 0:
         win_ratio_together = (wins_together[combination] / games) * 100
         table_data.append([
-            '{0:.2f}%'.format(win_ratio_together),
-            games,
-            wins_together[combination],
-            losses_together[combination],
-            wins_with_first_tower_kill[combination],
-            losses_with_first_tower_kill[combination],
-            wins_without_first_tower_kill[combination],
-            losses_without_first_tower_kill[combination],
-            ', '.join([player.title() for player in combination])
-        ])
+                '{0:.2f}%'.format(win_ratio_together),
+                games,
+                wins_together[combination],
+                wins_with_first_tower_kill[combination],
+                wins_without_first_tower_kill[combination],
+                losses_together[combination],
+                losses_with_first_tower_kill[combination],
+                losses_without_first_tower_kill[combination],
+                ', '.join([player.title() for player in combination])
+            ])
+
+# ...
+print(f"\nDESCRIPTION: This analyzes all ARAM matches and deduces when specific summoners get firstTowerKill.\n")
 
 table_data.sort(key=lambda row: float(row[0].strip('%')), reverse=True)
 
-print(tabulate(table_data, headers=['Win %', 'Total Games', 'Total Wins', 'Total Losses', 'wins_with_first_tower_kill', 'losses_without_first_tower_kill', 'wins_without_first_tower_kill', 'losses_with_first_tower_kill', 'Player Combination'], tablefmt='simple', numalign="left"))
+headers = ['Win %', 'Total Matches', 'Total Wins', 'Win=TRUE|1TK=TRUE', 'Win=TRUE|1TK=FALSE', 'Total Losses','Win=FALSE|1TK=TRUE', 'Win=FALSE|1TK=FALSE', 'Player Combination']
+formatted_data = []
+for i, row in enumerate(table_data):
+    if i % 2 == 1:
+        formatted_data.append([f"\033[1m{cell}\033[0m" for cell in row])  # Bold formatting for odd lines
+    else:
+        formatted_data.append(row)
 
-print(f"\n{error_count} file(s) were skipped due to errors.")
+print(tabulate(formatted_data, headers=headers, tablefmt='simple', numalign="left"))
+# ...
+print(f"\nLOGGING DATA:")
+print(f"{error_count} file(s) were skipped due to errors.")
 print(f"Total files scanned: {len(files)}")
 total_processed_matches = sum(games_played_together.values())
 player_counts = []
@@ -146,4 +158,3 @@ for i in range(len(players), 0, -1):
     combinations_of_i = list(itertools.combinations(players, i))
     count = sum(games_played_together[combo] for combo in combinations_of_i)
     player_counts.append(f'{i} players = {count}')
-print(f"Total matches scanned: {total_processed_matches} ({', '.join(player_counts)})")
