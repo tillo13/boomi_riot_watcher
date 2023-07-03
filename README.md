@@ -1,78 +1,116 @@
 # League of Legends ARAM Sabermetric Stats Enhancer (L.L.A.S.S.E?)
 
-This python script is used to fetch and calculate several individual statistics, overall statistics, and rank grades based on these statistics, from ARAM (All Random All Mid) matches played in the game League of Legends (LoL) using the Riot Games API.
+The project consists of a handful (more coming as fun) Python scripts.  You're welcome to tear them all apart.  I'm a mediocre player, so have mediocre results, but enjoy ARAM only, so they're all based on that.  These Python scripts are used to fetch, analyze, and visualize League of Legends ARAM match data. They can retrieve and analyze match data, generate detailed statistics about summoners and champions, and create a table that shows the win percentages of different combinations of players.
 
-This script requires the following environment variable to be set up:
+## Outline of the Scripts
 
-- `RIOT_API_KEY` - Your Riot Games API key which can be obtained from [Riot's Developer Portal](https://developer.riotgames.com/). The API key is required to fetch the match data from Riot's servers.
+1. `PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py`: This script is used to retrieve match data from the Riot Games API and save this data to local JSON files. The script first retrieves the summoner names and the Riot API key from environment variables. It then fetches data for each summoner and for each match where the summoner participated. The match data is saved to a JSON file located in a directory specific to the summoner.
 
-# Features
+2. `PROD_summoner_stats_per_champion.py`: This script analyzes the match data previously retrieved and creates a table with detailed statistics about each summoner and champion. The script traverses a directory tree where each directory is named for a summoner and contains the match data files for that summoner. The summoned data and the champion data are classified and various counts and averages are calculated (e.g., average damage dealt, total kills & deaths, etc.).
 
-- Fetch ARAM matches data from the Riot Games API.
-- Calculate a various of individual game metrics, including:
-  - Kill, death and assist ratios.
-  - Damage dealt per minute.
-  - Gold earned per minute.
-  - Percentage of team's overall damage dealt.
-  - Percentage of team's overall damage taken.
-- Determine a "total rank score" based on aforementioned calculated metrics.
-- Assign a grade (ranging from D- to S+) based on the "total rank score".
-- Calculate and display overall statistics across all queried matches.
-- Generate a comprehensive report for each match, including the match details, individual and overall stats, rank score and grade.
-- Save the data fetched to JSON files.
-  
-# How to use
+3. `PROD_riot_lol_wins_perc_by_group.py`: This script analyzes the match data previously retrieved and generates a table that shows the win percentages for all combinations of players specified. It scans the JSON match data files looking for matches where the specified summoners were participating. It then calculates win percentages and prints a table sorted by win percentage in descending order.
 
-Set up the `RIOT_API_KEY` as an environment variable in your system. 
-Then, run `python [prod]RunMe1st_riot_lol_query_any_number_user_save_json.py`.  This saves all the files to your local machine as JSON files, in a "matches" directory.
+## Installation and setup:
 
-Replace `'username'` in the script with your Summoner Name to fetch your own ARAM matches data.
+1. Download and Install Python
 
-You can modify options such as:
+   - This project requires Python 3 and is tested with Python 3.9.
+   - Download link and instructions are available here: https://www.python.org/downloads/
 
-- `debug_mode`: Set to `True` to print calculation details, `False` hides them.
-- `KDA_WEIGHT`: Modify this value to tweak the weight the KDA has on the total rank score.
+2. Clone this repository, navigate into the project directory.
 
-# Dependencies
+3. Install Packages
 
-The script requires the external libraries mentioned at the top of the script to be installed in your Python environment.
+   - Use the package manager [pip](https://pip.pypa.io/en/stable/) to install required packages.
 
-# Output
+   ```bash
+   pip install python-dotenv riotwatcher tabulate numpy termcolor pytz
+   ```
 
-The script will generate a JSON file for each match. It will also print to console match statistics, overall statistics, individual game statistics along with a rank score and its corresponding grade.
+4. Insert your RIOT API Key in the .env file.
 
-The JSON files will be stored in a folder named "matches" in the same directory of the script, and in a subfolder named with your summoner's name in lowercase and replacing spaces with underscores.
+   - Create an application in the [Riot Developer portal](https://developer.riotgames.com/) and generate an API key.
+   - Create a .env file in the project root and add the API key to it like so:
 
-Additionally, the script also calls another python script named `json_to_csv.py` that is supposed to convert the generated JSON files to a CSV file.
+   ```bash
+   RIOT_API_KEY='your-api-key-goes-here'
+   ```
 
--------------------
+5. Provide summoner(s) you'd like to analyze in the .env file. 
 
-**NOTE**: This script does not include exception handling for incorrect API keys, summoner names, or exceeded API call limits. The script will crash if encounters an API error. Also, to protect your API key and prevent unauthorized usage, do not publish it.
+   - Add the Summoners like so:
+
+   ```bash
+   PLAYERS='summoner1,summoner2'
+   ```
+
+## Running the scripts:
+
+Each script can be run from the command line by navigating into the script's directory and executing the script with Python. For example:
+
+- Fetch data:
+
+```bash
+python PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py
+```
+
+- Generate summoner & champion stats:
+
+```bash
+python PROD_summoner_stats_per_champion.py
+```
+
+- Generate win percentages table:
+
+```bash
+python PROD_riot_lol_wins_perc_by_group.py
+```
+## Note:
+
+This project uses the [RiotWatcher](https://riot-watcher.readthedocs.io/en/latest/) library to access the Riot Games API. According to the documentation of that library, requests to the Riot Games API are rate limited to 20 requests every 1 second and 100 requests every 2 minutes. These scripts don't implement any means to prevent exceeding this rate limit.
+
+The access to the Riot Games API is subject to the [Riot Games Developer Terms of Service](https://developer.riotgames.com/terms-of-service.html). Please ensure you read and understand these terms before you start fetching data from the API. 
+
+The Riot Games API can provide data from various regions. A region is set in the first script (`prod]RunMe1st_riot_lol_query_any_number_user_save_json.py`). By default, this is set as `'na1'` (North America). If you wish to gather data from a different region, make sure you modify that variable to your desired region according to the Riot API regional endpoints detailed in Riot API documentation.
+
+If you are not providing your summoner(s) via the environment variable `PLAYERS`, add your summoners to the list of `players` in `PROD_riot_lol_wins_perc_by_group.py`.
 
 
-# JSON to CSV Converter - `json_to_csv.py`
+## Potential Enhancements:
 
-This additional python script, `json_to_csv.py`, is used to convert multiple JSON files fetched by the main script that derive from Riot Games API data of League of Legends ARAM matches into a single CSV file.
+- Implement a means to honor the rate limits imposed by the Riot Games API.
+- Add error checking to ensure the Riot Games API key is provided and that it is a valid key.
+- Add support to gather data from more than one region concurrently.
+- Improve parsing and calculation performance by optimizing data structures and algorithms used.
+- Add the ability to exclude certain match data from the result. This can be helpful if you want to focus on recent data, or if you had a very bad day and fed horribly in all matches :)
+- Writes data directly to a Structured Query Language (SQL) database or NoSQL database for more robust data handling.
 
-## Features
+##example outputs: 
+For PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py, the output appears as follows:
 
-- Convert multiple JSON files into a single CSV file.
-- Handle nested JSON objects and lists by flattening them into a single level depth.
-- Handle exceptions and print the respective error message.
-- Optional to set a custom filename for the output CSV file and to specify a specific user's matches data to fetch from. 
+```
+Number of users to process: 5
+[Now] user1: [Valid user!] Last logged match: 2022-April-12_1748! Processing... (1/5)
+```
 
-## How to use
+For PROD_riot_lol_wins_perc_by_group.py, the following output may be given:
 
-This script is automatically called at the end of the main script. If you want to run this script manually, you can run `python3 json_to_csv.py your_csv_filename your_summoner_name`, replacing 'your_csv_filename' with the desired name for the output CSV file and 'your_summoner_name' with the Summoner Name whose matches data you wish to convert. If no arguments are provided, the script will run with the default options.
+```
+Win %    Total Games    Total Wins    Total Losses    First Played              Last Played              Last Match Id    Player Combination
+-------  -------------  ------------  --------------  ------------------------  -----------------------  ---------------  -------------------------------------
+54.93%   304            167           137             2021-June-30_104248       2023-June-08_173944      NA1_4678394439   Joeyjoejoe, Bobbybobbob
+51.46%   274            141           133             2021-January-22_122733    2023-June-26_174954      NA1_4695645856   Jimmyjimjim, Bobbybobbob
+50.00%   10             5             5               2023-June-08_085204       2023-June-28_131835      NA1_4697320513   Jimmyjimjim, Bobbybobbob, Joeyjoejoe
+49.04%   989            485           504             2022-September-23_083319  2023-July-02_092607      NA1_4701030962   Joeyjoejoe
+```
+For the PROD_summoner_stats_per_champion.py example, the following output may be generated:
 
-## Dependencies
+```
+Summoner     Champ           Match Count    Avg KDA    Kills    Deaths    Assists    DoubleKs    TripleKs    QuadraKs    PentaKs    Max kSpree    Avg dmg Dealt    Max Kills  Last Match Played As
+-----------  ------------  -------------  ---------  -------  --------  ---------  ----------  ----------  ----------  ---------  ------------  ---------------  -----------  ------------------------
+Joeyjoejoe   Karthus                  46      2.861      408       642       1367           1           1           3          6            23            20277           19  2023-July-01_075445
+Bobbybobbob  Chogath                  40      3.804      323       358        907           1           5           3          2            24            20095           28  2023-June-29_202434
+Jimmyjimjim  FiddleSticks             40      3.829      296       377        964           0           2           9          2            31            17695           14  2023-July-02_092607
+``` 
 
-This script requires the pandas, os, json and datetime modules to be pre-installed in your Python environment.
-
-## Output
-
-The script generates a CSV file with the same data from the JSON files. The CSV file will be stored in the same user's subfolder inside the "matches" directory. The name of the file can be set with an argument when running the script, otherwise it will be named "default.csv".
-
-Upon completion, the script will print a success message, specifying the name and the location of the generated CSV file.
-
-**NOTE**: This script does not include exception handling for nonexistent directories, improperly formatted JSON files, or CSV write errors. The script will crash if encounters such errors.
+These examples illustrate how the scripts might present output based on the function performed by each script.  There's more, but creating this readme with chatGPT, I've run out of tokens, soooo, I'll just stop here.  Feel free to use for whatever reason.  MIT licensed, so do what you'd like!
