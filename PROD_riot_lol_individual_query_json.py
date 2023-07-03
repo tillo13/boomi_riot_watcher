@@ -2,6 +2,8 @@ import os
 import json
 from tabulate import tabulate
 from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+load_dotenv()
 
 matches_folder = "matches"  # Specify the folder path
 
@@ -21,7 +23,15 @@ combined_total_penta_kills = 0
 
 # Iterate over the subdirectories and extract the summoner names
 summoner_data = []
-combined_summoners = ["Milltill005", "Lilla Bryar", "Anonobot", "Cardyflower", "Statfame"]
+
+#this is fun where if you have more than one username, you can add it here, and it'll add them all up at the end.
+#combined_summoners = ["username1", "username2", "username3"]
+
+#or just add them to your .env file here, and combine them after.
+combined_summoners_string = os.getenv('COMBINED_SUMMONERS')
+combined_summoners = [name.title() for name in combined_summoners_string.split(',')]
+
+
 
 for directory in subdirectories:
     summoner_name = directory.replace("_", " ").title()
