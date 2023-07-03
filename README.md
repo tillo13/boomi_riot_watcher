@@ -71,7 +71,7 @@ This project uses the [RiotWatcher](https://riot-watcher.readthedocs.io/en/lates
 
 The access to the Riot Games API is subject to the [Riot Games Developer Terms of Service](https://developer.riotgames.com/terms-of-service.html). Please ensure you read and understand these terms before you start fetching data from the API. 
 
-The Riot Games API can provide data from various regions. A region is set in the first script (`prod]RunMe1st_riot_lol_query_any_number_user_save_json.py`). By default, this is set as `'na1'` (North America). If you wish to gather data from a different region, make sure you modify that variable to your desired region according to the Riot API regional endpoints detailed in Riot API documentation.
+The Riot Games API can provide data from various regions. A region is set in the first script (`PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py`). By default, this is set as `'na1'` (North America). If you wish to gather data from a different region, make sure you modify that variable to your desired region according to the Riot API regional endpoints detailed in Riot API documentation.
 
 If you are not providing your summoner(s) via the environment variable `PLAYERS`, add your summoners to the list of `players` in `PROD_riot_lol_wins_perc_by_group.py`.
 
