@@ -1,4 +1,8 @@
-#add your API key to your .env file and kick this off to save all your files for ~2 years to your local drive.
+#2023july3 add your API key to your .env file and kick this off to save all your files for ~2 years to your local drive.
+# This script retrieves match details for summoner names provided in the environment variable 'PLAYERS'. 
+# It uses the Riot API to fetch ARAM matches and saves them as JSON files in a local directory. 
+# The script also keeps track of the number of new and existing matches and provides a summary of the execution.
+
 import json
 import os
 import time
