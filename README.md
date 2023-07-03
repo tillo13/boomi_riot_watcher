@@ -86,7 +86,7 @@ If you are not providing your summoner(s) via the environment variable `PLAYERS`
 - Writes data directly to a Structured Query Language (SQL) database or NoSQL database for more robust data handling.
 
 ##example outputs: 
-For PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py, the output appears as follows:
+For PROD_RunMe1st_riot_lol_query_any_number_user_save_json.py, the output appears as follows and is the key to the whole show.  This queries Riot API and pulls all the games to your local device as JSON.
 
 ```
 Number of users to process: 5
