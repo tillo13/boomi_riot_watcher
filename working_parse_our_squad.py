@@ -69,8 +69,7 @@ def process_user(user, matching_participants):
 
             # Get the match details using LolWatcher's API
             match_info = lol_watcher.match.by_id(region, match_id)
-
-            # Rest of the code...
+            
             # Extract specific fields from the "info" section
             game_creation = match_info['info']['gameCreation']
             game_duration = match_info['info']['gameDuration']
