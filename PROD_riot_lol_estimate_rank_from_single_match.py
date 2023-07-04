@@ -3,7 +3,7 @@ from tabulate import tabulate
 from termcolor import colored
 
 # Set the value of detailed_version (True) for more info/to analyze more in depth, but might overwhelm your terminal
-detailed_version = True
+detailed_version = False
 
 # Read the JSON file
 with open('NA1_4698549616.json') as file:
@@ -145,29 +145,26 @@ def deduce_rank(participant):
     else:
         return 'D-'
 
-# Calculate the rank score based on the metrics
-def calculate_rank_score(kda, takedowns, deaths, damagePerMinute,
-                         damageTakenOnTeamPercentage, killParticipation,
-                         turretTakedowns, goldPerMinute, healingAndShielding,
-                         totalDamageDealtToChampions, totalTimeCCDealt,
-                         totalDamageTaken, totalUnitsHealed):
-    rank_score = 0
-
-    rank_score += kda
-    rank_score += takedowns / 10
-    rank_score -= deaths / 10
-    rank_score += damagePerMinute / 100
-    rank_score -= damageTakenOnTeamPercentage * 10
-    rank_score += killParticipation
-    rank_score += turretTakedowns
-    rank_score += goldPerMinute / 100
-    rank_score += healingAndShielding / 1000
-    rank_score += totalDamageDealtToChampions / 1000
-    rank_score += totalTimeCCDealt / 100
-    rank_score -= totalDamageTaken / 1000
-    rank_score += totalUnitsHealed / 10
-
-    return rank_score
+# Define color ranges for different columns
+color_ranges = {
+    'KDA': [(6, 'green'), (4, 'yellow'), (0, 'blue')],
+    'Takedowns': [(40, 'green'), (30, 'yellow'), (20, 'blue')],
+    'Deaths': [(3, 'green'), (5, 'yellow'), (7, 'blue')],
+    'Damage Taken Percentage': [(0.1, 'green'), (0.15, 'yellow'), (0.2, 'blue')],
+    'Kill Participation': [(0.8, 'green'), (0.6, 'yellow'), (0.4, 'blue')],
+    'Gold Per Minute': [(800, 'green'), (600, 'yellow'), (500, 'blue')],
+    'Healing and Shielding': [(5000, 'green'), (3000, 'yellow')],
+    'Total Damage Dealt to Champions': [(30000, 'green'), (20000, 'yellow'), (9000, 'blue')],
+    'Damage Per Minute': [(1500, 'green'), (1000, 'yellow'), (500, 'blue')],
+    'Total Time CC Dealt': [(1000, 'green')],
+    'Total Damage Taken': [(20000, 'green'), (30000, 'yellow')],
+    'Total Units Healed': [(10, 'green')],
+    'Estimated Rank': [('S+', 'green'), ('S', 'green'), ('S-', 'green'),
+                      ('A+', 'yellow'), ('A', 'yellow'), ('A-', 'yellow'),
+                      ('B+', 'yellow'), ('B', 'blue'), ('B-', 'blue'),
+                      ('C+', 'blue'), ('C', 'blue'), ('C-', 'blue'),
+                      ('D+', 'blue'), ('D', 'blue'), ('D-', 'blue')]
+}
 
 # Display the data in a tabular format
 print("\n")
@@ -181,7 +178,7 @@ else:
     headers = ["Summoner Name", "Champion Name", "KDA", "Kill Participation",
                "Gold Per Minute", "Damage Per Minute",
                "Total Damage Dealt to Champions", "Estimated Rank"]
-    
+
 table_data = []
 for participant in participants:
     # Extract relevant data based on the value of detailed_version
@@ -205,41 +202,44 @@ for participant in participants:
         total_damage_taken = participant.get('totalDamageTaken', 0)
         total_units_healed = participant.get('totalUnitsHealed', 0)
 
-        table_data.append([summoner_name, champion_name, kda, takedowns, deaths, kills,
-                           damage_taken_percentage, kill_participation, turret_takedowns,
-                           gold_per_minute, damage_per_minute, healing_and_shielding,
-                           total_damage_dealt, total_time_cc_dealt, total_damage_taken,
-                           total_units_healed, estimated_rank])
+        table_row = [summoner_name, champion_name, kda, takedowns, deaths, kills,
+                     damage_taken_percentage, kill_participation, turret_takedowns,
+                     gold_per_minute, damage_per_minute, healing_and_shielding,
+                     total_damage_dealt, total_time_cc_dealt, total_damage_taken,
+                     total_units_healed, estimated_rank]
     else:
-        table_data.append([summoner_name, champion_name, kda, kill_participation,
-                           gold_per_minute, damage_per_minute, total_damage_dealt,
-                           estimated_rank])
+        table_row = [summoner_name, champion_name, kda, kill_participation,
+                     gold_per_minute, damage_per_minute, total_damage_dealt,
+                     estimated_rank]
 
-# Add color to table_data based on certain columns
-colored_table_data = []
-for row in table_data:
+    # Color the values based on the color ranges
     colored_row = []
-    for i, value in enumerate(row):
-        # Define color thresholds for specific columns
-        if headers[i] == "KDA":
-            if value >= 6:
-                colored_value = colored(value, "green")
-            elif value >= 4:
-                colored_value = colored(value, "yellow")
+    for i, value in enumerate(table_row):
+        header = headers[i]
+        if header == 'Estimated Rank':
+            color_range = color_ranges[header]
+            for rank, color in color_range:
+                if value == rank:
+                    colored_value = colored(value, color)
+                    break
             else:
-                colored_value = colored(value, "blue")
-        elif headers[i] == "Estimated Rank":
-            if value in ["S+", "S", "S-"]:
-                colored_value = colored(value, "green")
-            elif value in ["A+", "A", "A-"]:
-                colored_value = colored(value, "yellow")
+                # If no rank matches, use the default color for the column
+                colored_value = colored(str(value))
+        elif header in color_ranges:
+            color_range = color_ranges[header]
+            for threshold, color in color_range:
+                if value >= threshold:
+                    colored_value = colored(value, color)
+                    break
             else:
-                colored_value = colored(value, "blue")
+                # If no threshold matches, use the default color for the column
+                colored_value = colored(str(value))
         else:
             colored_value = value
         colored_row.append(colored_value)
-    colored_table_data.append(colored_row)
 
-table = tabulate(colored_table_data, headers, tablefmt="pipe")
+    table_data.append(colored_row)
+
+table = tabulate(table_data, headers, tablefmt="pipe")
 print(table)
 print("\n")
