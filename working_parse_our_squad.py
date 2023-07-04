@@ -35,7 +35,11 @@ users = OUR_SQUAD.split(',')
 matching_participants = []
 
 def print_field_with_breadcrumbs(field_name, field_value, breadcrumbs="info", color="\033[92m"):
-    print(f"{color}{breadcrumbs}->{field_name}: {field_value}\033[0m")
+    # Adjust the color according to the breadcrumbs
+    if breadcrumbs.endswith("teams"):
+        print(f"{breadcrumbs}->{field_name}: \033[91m{field_value}\033[0m")
+    else:
+        print(f"{breadcrumbs}->{field_name}: \033[92m{field_value}\033[0m")
 
 def check_user_in_squad(user):
     try:
@@ -69,7 +73,7 @@ def process_user(user, matching_participants):
 
             # Get the match details using LolWatcher's API
             match_info = lol_watcher.match.by_id(region, match_id)
-            
+
             # Extract specific fields from the "info" section
             game_creation = match_info['info']['gameCreation']
             game_duration = match_info['info']['gameDuration']
@@ -104,12 +108,12 @@ def process_user(user, matching_participants):
 
             # Display the teams data in red
             print("")
-            print_field_with_breadcrumbs("teams", "", color="\033[91m")
+            print("\033[93mteams\033[0m")
             for i, team in enumerate(teams):
-                print_field_with_breadcrumbs(f"Team {i+1}", "", breadcrumbs="teams", color="\033[91m")
+                print(f"\033[93mTeam {i+1}\033[0m")
                 for field_name, field_value in team.items():
                     if field_name == "objectives":
-                        print_field_with_breadcrumbs(field_name, "", breadcrumbs=f"teams->Team {i+1}", color="\033[91m")
+                        print(f"teams->Team {i+1}->{field_name}")
                         for objective_name, objective_value in field_value.items():
                             for sub_field_name, sub_field_value in objective_value.items():
                                 print_field_with_breadcrumbs(sub_field_name, sub_field_value, breadcrumbs=f"teams->Team {i+1}->{field_name}->{objective_name}", color="\033[91m")
