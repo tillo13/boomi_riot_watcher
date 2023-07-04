@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from riotwatcher import LolWatcher, ApiError
 
@@ -16,6 +17,16 @@ OUR_SQUAD = os.getenv('OUR_SQUAD')
 
 # Initialize LolWatcher with your API key
 lol_watcher = LolWatcher(RIOT_API_KEY)
+
+# Save the match_data to a JSON file
+directory = 'single_match_analysis'
+
+# Create the directory if it doesn't exist
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
+file_name = match_id + '.json'
+file_path = os.path.join(directory, file_name)
 
 def print_field_with_breadcrumbs(field_name, field_value, breadcrumbs="info", color="\033[92m"):
     print(f"{color}{breadcrumbs}->{field_name}: {field_value}\033[0m")
@@ -101,6 +112,10 @@ def process_user(user, matching_participants):
 
         try:
             match_data = lol_watcher.match.by_id(region, match_id)
+            # Save the match_data to a JSON file
+            with open(file_path, 'w') as file:
+                json.dump(match_data, file)
+
             participants = match_data['info']['participants']
 
             found_match = False
