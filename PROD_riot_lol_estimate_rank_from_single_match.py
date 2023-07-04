@@ -1,3 +1,5 @@
+#use this as a standalone in tandem with PROD_riot_lol_query_and_save_single_match.py (run it first) to analyze.
+#or run PROD_riot_lol_rank_everyone_single_match.py as it combines the 2 scripts.
 import json
 from tabulate import tabulate
 from termcolor import colored
