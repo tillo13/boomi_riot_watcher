@@ -113,8 +113,8 @@ def process_user(user, matching_participants):
         try:
             match_data = lol_watcher.match.by_id(region, match_id)
             # Save the match_data to a JSON file
-            with open(file_path, 'w') as file:
-                json.dump(match_data, file)
+            # with open(file_path, 'w') as file:
+            # json.dump(match_data, file)
 
             participants = match_data['info']['participants']
 
@@ -127,17 +127,14 @@ def process_user(user, matching_participants):
                     print(f"\033[94mParsed stats for the matching participant {user}:\033[0m")
                     print_values_with_breadcrumbs(participant, f"info->participants->[{participant_id}]")
                     found_match = True
+                    matching_participants.append({
+                        'summoner_name': user,
+                        'participant_id': participant_id
+                    })
                     break
 
             if not found_match:
                 print(f"No members of OUR_SQUAD [variable set at the beginning] were found in the match: {match_id}")
-
-            # Add the user to matching_participants list if found in the game
-            if found_match:
-                matching_participants.append({
-                    'summoner_name': user,
-                    'participant_id': participant_id
-                })
 
         except ApiError as err:
             if err.response.status_code == 429:
@@ -160,9 +157,6 @@ matching_participants = []
 for user in users:
     # Call the process_user function for the current user
     process_user(user, matching_participants)
-    # If matching_participants is not empty, break the loop
-    if matching_participants:
-        break
 
 # Check if there are matching participants
 if matching_participants:
