@@ -5,7 +5,7 @@
 *.env
 .DS_Store
 matches/
-single/match/analysis
+single_match_analysis
 
 # Exclude matches directory
 matches/
