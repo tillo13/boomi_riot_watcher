@@ -10,6 +10,13 @@ from termcolor import colored
 
 load_dotenv()
 
+
+# Specify the match ID
+match_id = 'NA1_4305831354'  # Set your matchID, don't forget region specific bit at the start.
+
+# Deduce the region from the matchID above
+region = match_id.split('_')[0]
+
 # Set the value of detailed_version (True) for more info/to analyze more in depth, but might overwhelm your terminal
 detailed_version = False
 
@@ -18,12 +25,6 @@ RIOT_API_KEY = os.getenv('RIOT_API_KEY')
 
 # Initialize LolWatcher with your API key
 lol_watcher = LolWatcher(RIOT_API_KEY)
-
-# Specify the region
-region = 'na1'
-
-# Specify the match ID
-match_id = 'NA1_4474848706'  # Set your match
 
 # Set the file name
 file_name = match_id + '.json'
