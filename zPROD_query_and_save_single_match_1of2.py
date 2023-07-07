@@ -16,7 +16,7 @@ lol_watcher = LolWatcher(RIOT_API_KEY)
 region = 'na1'
 
 # Specify the match ID
-match_id = 'NA1_4698549616' #set your match
+match_id = 'NA1_4704247243' #set your match
 
 # Use the by_id method to get the match data
 try:

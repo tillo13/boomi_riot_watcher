@@ -11,14 +11,14 @@ from termcolor import colored
 load_dotenv()
 
 
+# Set the value of detailed_version (True) for more info/to analyze more in depth, but might overwhelm your terminal
+detailed_version = False
+
 # Specify the match ID
-match_id = 'NA1_4702476487'  # Set your matchID, don't forget region specific bit at the start.
+match_id = 'NA1_4704247243'  # Set your matchID, don't forget region specific bit at the start.
 
 # Deduce the region from the matchID above
 region = match_id.split('_')[0]
-
-# Set the value of detailed_version (True) for more info/to analyze more in depth, but might overwhelm your terminal
-detailed_version = False
 
 # Load your API key from environment variables or secret storage
 RIOT_API_KEY = os.getenv('RIOT_API_KEY')
@@ -71,6 +71,7 @@ try:
             takedowns = get_metric(metrics, 'takedowns')
             deaths = participant.get('deaths', 0)
             kills = participant.get('kills', 0)
+            assists = participant.get('assists', 0)
             damagePerMinute = get_metric(metrics, 'damagePerMinute')
             damageTakenOnTeamPercentage = get_metric(metrics, 'damageTakenOnTeamPercentage')
             killParticipation = get_metric(metrics, 'killParticipation')
@@ -80,6 +81,7 @@ try:
             totalDamageDealtToChampions = participant.get('totalDamageDealtToChampions', 0)
             totalTimeCCDealt = participant.get('totalTimeCCDealt', 0)
             totalDamageTaken = participant.get('totalDamageTaken', 0)
+            totalDamageDealt = participant.get('totalDamageDealt', 0)
             totalUnitsHealed = participant.get('totalUnitsHealed', 0)
 
             # Deduction based on the metrics
@@ -199,10 +201,11 @@ try:
         'Kill Participation': [(0.8, 'green'), (0.6, 'yellow'), (0.4, 'blue')],
         'Gold Per Minute': [(800, 'green'), (600, 'yellow'), (500, 'blue')],
         'Healing and Shielding': [(5000, 'green'), (3000, 'yellow')],
-        'Total Damage Dealt to Champions': [(30000, 'green'), (20000, 'yellow'), (9000, 'blue')],
+        'Total Damage Dealt': [(30000, 'green'), (20000, 'yellow'), (9000, 'blue')],
         'Damage Per Minute': [(1500, 'green'), (1000, 'yellow'), (500, 'blue')],
         'Total Time CC Dealt': [(1000, 'green')],
         'Total Damage Taken': [(20000, 'green'), (30000, 'yellow')],
+        
         'Total Units Healed': [(10, 'green')],
         'Estimated Rank': [('S+', 'green'), ('S', 'green'), ('S-', 'green'),
                           ('A+', 'yellow'), ('A', 'yellow'), ('A-', 'yellow'),
@@ -212,17 +215,18 @@ try:
     }
 
     # Display the data in a tabular format
+    # Display the data in a tabular format
     print("\n")
     if detailed_version:
-        headers = ["Summoner Name", "Champion Name", "KDA", "Takedowns", "Deaths", "Kills",
-                   "Damage Taken Percentage", "Kill Participation", "Turret Takedowns",
-                   "Gold Per Minute", "Damage Per Minute", "Healing and Shielding",
-                   "Total Damage Dealt to Champions", "Total Time CC Dealt",
-                   "Total Damage Taken", "Total Units Healed", "Estimated Rank"]
+        headers = ["Summoner Name", "Champion Name", "KDA", "Takedowns", "Deaths", "Kills", "Assists",
+                "Damage Taken Percentage", "Kill Participation", "Turret Takedowns",
+                "Gold Per Minute", "Damage Per Minute", "Healing and Shielding",
+                "Total Damage Dealt", "Total Time CC Dealt",
+                "Total Damage Taken", "Total Units Healed", "Estimated Rank"]
     else:
         headers = ["Summoner Name", "Champion Name", "KDA", "Kill Participation",
-                   "Gold Per Minute", "Damage Per Minute",
-                   "Total Damage Dealt to Champions", "Estimated Rank"]
+                "Gold Per Minute", "Damage Per Minute",
+                "Total Damage Dealt", "Estimated Rank"]
 
     table_data = []
     for participant in participants:
@@ -231,32 +235,45 @@ try:
             summoner_name = participant['summonerName']
             champion_name = participant['championName']
             kda = participant['challenges'].get('kda', 0)
+            takedowns = participant['challenges'].get('takedowns', 0)
+            deaths = participant.get('deaths', 0)
+            kills = participant.get('kills', 0)
+            assists = participant.get('assists', 0)
+            damage_taken_percentage = participant['challenges'].get('damageTakenOnTeamPercentage', 0)
             kill_participation = participant['challenges'].get('killParticipation', 0)
             gold_per_minute = participant['challenges'].get('goldPerMinute', 0)
             damage_per_minute = participant['challenges'].get('damagePerMinute', 0)
-            total_damage_dealt = participant.get('totalDamageDealtToChampions', 0)
+            healing_and_shielding = participant['challenges'].get('effectiveHealAndShielding', 0)
+            total_damage_dealt_to_champions = participant.get('totalDamageDealtToChampions', 0)
+            total_damage_dealt = participant.get('totalDamageDealt', 0)
+            total_time_cc_dealt = participant.get('totalTimeCCDealt', 0)
+            total_damage_taken = participant.get('totalDamageTaken', 0)
+            total_units_healed = participant.get('totalUnitsHealed', 0)
             estimated_rank = deduce_rank(participant)
 
             if detailed_version:
                 takedowns = participant['challenges'].get('takedowns', 0)
                 deaths = participant.get('deaths', 0)
                 kills = participant.get('kills', 0)
+                assists = participant.get('assists', 0)
                 damage_taken_percentage = participant['challenges'].get('damageTakenOnTeamPercentage', 0)
                 turret_takedowns = participant['challenges'].get('turretTakedowns', 0)
                 healing_and_shielding = participant['challenges'].get('effectiveHealAndShielding', 0)
                 total_time_cc_dealt = participant.get('totalTimeCCDealt', 0)
                 total_damage_taken = participant.get('totalDamageTaken', 0)
+                total_damage_Dealt = participant.get('totalDamageDealt', 0)
                 total_units_healed = participant.get('totalUnitsHealed', 0)
 
-                table_row = [summoner_name, champion_name, kda, takedowns, deaths, kills,
-                             damage_taken_percentage, kill_participation, turret_takedowns,
-                             gold_per_minute, damage_per_minute, healing_and_shielding,
-                             total_damage_dealt, total_time_cc_dealt, total_damage_taken,
-                             total_units_healed, estimated_rank]
+
+                table_row = [summoner_name, champion_name, kda, takedowns, deaths, kills, assists,
+                            damage_taken_percentage, kill_participation, turret_takedowns,
+                            gold_per_minute, damage_per_minute, healing_and_shielding,
+                            total_damage_dealt, total_time_cc_dealt, total_damage_taken,
+                            total_units_healed, estimated_rank]
             else:
                 table_row = [summoner_name, champion_name, kda, kill_participation,
-                             gold_per_minute, damage_per_minute, total_damage_dealt,
-                             estimated_rank]
+                            gold_per_minute, damage_per_minute, total_damage_dealt,
+                            estimated_rank]
 
             # Color the values based on the color ranges
             colored_row = []
@@ -287,7 +304,7 @@ try:
             table_data.append(colored_row)
 
         except KeyError:
-            print("This appears to be the older version of Riot's API, so we can't parse properly, sorry!")
+            print("This appears to be the older version of Riot's API, and we didn't equip ourselves to play that one anymore!  Try a newer match!")
             break
 
     if table_data:

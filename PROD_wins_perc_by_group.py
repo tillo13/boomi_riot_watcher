@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get the players from the environment variable
-players_str = os.getenv('PLAYERS')
+players_str = os.getenv('OUR_SQUAD')
 players = players_str.split(',') if players_str is not None else []
 
 #players = ['put_user', 'more users', 'even_more']

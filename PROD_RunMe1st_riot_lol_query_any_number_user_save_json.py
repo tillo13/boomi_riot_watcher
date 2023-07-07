@@ -15,7 +15,7 @@ import numpy as np
 start_time = time.time()  # Start the timer
 
 ######set these values if you'd like#####
-max_matches_to_pull = 1000   # Set the desired number of matches to fetch
+max_matches_to_pull = 10000   # Set the desired number of matches to fetch
 my_region = 'na1'  # Set your region
 
 load_dotenv()

@@ -6,6 +6,7 @@
 .DS_Store
 matches/
 single_match_analysis/
+working_*
 
 # Exclude matches directory
 matches/
